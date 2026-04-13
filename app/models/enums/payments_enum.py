@@ -1,11 +1,10 @@
-from enum import Enum
+import enum
 
-
-class PaymentMethodEnum(Enum):
+class PaymentMethodEnum(enum.Enum):
     card = "card"
     cash = "cash"
 
-class PaymentStatusEnum(Enum):
+class PaymentStatusEnum(enum.Enum):
     success = "success"
     failed = "failed"
     refunded = "refunded"

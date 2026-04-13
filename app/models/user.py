@@ -1,6 +1,5 @@
 import uuid
-from enum import Enum
-from sqlalchemy import String, Boolean, ForeignKey
+from sqlalchemy import String, Boolean, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
