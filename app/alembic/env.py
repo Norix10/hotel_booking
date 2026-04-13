@@ -8,10 +8,16 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from app.core.config import settings
 
+import sys
+from os.path import abspath, dirname
+
+sys.path.insert(0, abspath(dirname(dirname(__file__))))
+
 from app.models.base import Base
+from app.models.user import User
 from app.models.booking import Booking
 from app.models.payment import Payment
-from app.models.room_types import RoomTypes
+from app.models.room_type import RoomType
 from app.models.room import Room
 
 # this is the Alembic Config object, which provides
