@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, ForeignKey, Enum
+from sqlalchemy import Integer, ForeignKey, Enum, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -7,7 +7,7 @@ from app.models.enums.room_enum import RoomStatusType
 
 class Room(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
-    room_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    room_name: Mapped[str] = mapped_column(String, nullable=False)
     room_type_id: Mapped[int] = mapped_column(
         ForeignKey("room_types.id", ondelete="CASCADE"), nullable=False
     )
@@ -20,4 +20,4 @@ class Room(Base):
         back_populates="room", cascade="all, delete-orphan"
     )
 
-    room_types: Mapped["RoomTypes"] = relationship(back_populates="room")
+    room_types: Mapped["RoomType"] = relationship(back_populates="room")

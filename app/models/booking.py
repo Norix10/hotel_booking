@@ -12,16 +12,19 @@ class Booking(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    room_id: Mapped[str] = mapped_column(
+    room_id: Mapped[int] = mapped_column(
         ForeignKey("rooms.id", ondelete="CASCADE"), nullable=False
     )
     check_in: Mapped[datetime] = mapped_column(nullable=False)
     check_out: Mapped[datetime] = mapped_column(nullable=False)
-    total_price: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[BookingStatus] = mapped_column(Enum(BookingStatus), nullable=False)
 
     payment: Mapped[list["Payment"]] = relationship(
         back_populates="booking", cascade="all, delete-orphan"
     )
-    user: Mapped["User"] = relationship(back_populates="booking")
-    room: Mapped["Room"] = relationship(back_populates="booking")
+    user: Mapped["User"] = relationship(back_populates="bookings")
+    room: Mapped["Room"] = relationship(back_populates="bookings")
+
+    @property
+    def total_days(self) -> int:
+        return (self.check_out - self.check_in).days

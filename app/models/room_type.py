@@ -11,13 +11,13 @@ class RoomType(Base):
     base_price: Mapped[int] = mapped_column(Integer, nullable=False)
     capacity: Mapped[int] = mapped_column(Integer, nullable=False)
     bed_type: Mapped[str] = mapped_column(String(30), nullable=False)
-    role: Mapped[RoomBathroomType] = mapped_column(
+    bathroom_type: Mapped[RoomBathroomType] = mapped_column(
         Enum(RoomBathroomType), nullable=False
     )
-    area_sq_m: Mapped[str] = mapped_column(Integer, nullable=False)
+    area_sq_m: Mapped[int] = mapped_column(Integer, nullable=False)
     has_ac: Mapped[bool] = mapped_column(Boolean, nullable=False)  # air conditioner
     has_wifi: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     room: Mapped[list["Room"]] = relationship(
-        back_populates="room_type", cascade="all, delete-orphan"
+        back_populates="room_types", cascade="all, delete-orphan"
     )

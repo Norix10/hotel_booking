@@ -13,7 +13,7 @@ class Payment(Base):
     booking_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("bookings.id", ondelete="CASCADE"), nullable=False
     )
-    amout: Mapped[int] = mapped_column(Integer, nullable=False)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
     payment_method: Mapped[PaymentMethodEnum] = mapped_column(
         Enum(PaymentMethodEnum), nullable=False
     )
