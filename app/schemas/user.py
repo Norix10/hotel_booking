@@ -37,6 +37,24 @@ class UserSignInSchema(UserAuthValidatorShema):
     pass
 
 
+class UserUpdateSchema(BaseModel):
+    name: str | None = Field(
+        default=None, min_length=2, max_length=30, examples=["User Userson"]
+    )
+    email: EmailStr | None = Field(default=None, examples=["user.userson@example.com"])
+    password: str | None = Field(default=None, min_length=8)
+
+    @field_validator("password")
+    @classmethod
+    def password_complexity(cls, v: str) -> str:
+        if not PASSWORD_PATTERN.match(v):
+            raise ValueError(
+                "Password must contain at least one uppercase letter, "
+                "one lowercase letter, one number and one special character"
+            )
+        return v
+
+
 class UserResponseSchema(UserBaseSchema):
     id: UUID
     email: EmailStr = Field(examples=["user.userson@example.com"])
