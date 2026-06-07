@@ -15,7 +15,7 @@ class User(Base):
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole), default=UserRole.user, nullable=False
     )
-    active: Mapped[bool] = mapped_column(default=Boolean(True), nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, default=(True), nullable=False)
 
     bookings: Mapped[list["Booking"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
