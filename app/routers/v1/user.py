@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, Security
+from fastapi import APIRouter, Depends, Security, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db_session
-from app.schemas.user import UserCreateSchema, UserResponseSchema, UserSignInSchema
+from app.schemas.user import UserCreateSchema, UserResponseSchema, UserSignInSchema, UserUpdateSchema
 from app.schemas.auth import AuthResponse, AccessTokenDataSchema
 from app.core.dependencies import get_current_user, get_user_service
 from app.models.user import User
@@ -13,26 +13,40 @@ router = APIRouter(prefix="/user", tags=["users"])
 
 
 @router.post("")
-async def create(
+async def register(
     data: UserCreateSchema,
     user_service: UserService = Depends(get_user_service),
-    session: AsyncSession = Depends(get_db_session),
 ):
     return await user_service.create_user(data)
 
 
-@router.post("/login", response_model=AuthResponse)
-async def login(
+@router.post("/singin", response_model=AuthResponse)
+async def signin(
     data: UserSignInSchema,
     user_service: UserService = Depends(get_user_service),
-    session: AsyncSession = Depends(get_db_session),
 ) -> AuthResponse:
-    return await user_service.authenticate(data, session)
+    return await user_service.authenticate(data)
 
 
 @router.get("/me", response_model=UserResponseSchema)
-async def me(
+async def get_me(
     current_user: User = Security(get_current_user),
-    session: AsyncSession = Depends(get_db_session),
 ) -> User:
     return current_user
+
+
+@router.patch("/", response_model=UserResponseSchema)
+async def update_me(
+    data: UserUpdateSchema,
+    user_service: UserService = Depends(get_user_service),
+    current_user: User = Security(get_current_user),
+) -> UserResponseSchema:
+    return await user_service.update_user(current_user.id, data)
+
+
+@router.delete("/", status_code=status.HTTP_200_OK)
+async def delete_me(
+    user_service: UserService = Depends(get_user_service),
+    current_user: User = Security(get_current_user),
+):
+    return await user_service.delete_user(current_user.id)
