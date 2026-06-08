@@ -55,7 +55,7 @@ class UserService:
         )
         return await self.user_repo.create(user)
 
-    async def authenticate(self, data: UserSignInSchema, session: AsyncSession) -> AuthResponse:
+    async def authenticate(self, data: UserSignInSchema) -> AuthResponse:
         user = await self.user_repo.get_by_email(data.email)
         if not user or not verify_password(data.password, user.hashed_password):
             raise HTTPException(
