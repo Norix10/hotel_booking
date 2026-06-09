@@ -16,3 +16,6 @@ class RoomRepository(BaseRepository[Room]):
         rooms = await self.session.execute(select(Room).where(Room.status == RoomStatusType.available))
         return rooms.scalars().all()
     
+    async def get_by_id(self, room_id: int) -> Room:
+        room = await self.session.execute(select(Room).where(Room.id == room_id))
+        return room.scalar_one_or_none()
