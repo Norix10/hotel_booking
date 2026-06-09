@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from app.models.enums.room_enum import RoomBathroomType
 
 
-class RoomTypeResponseSchema(BaseModel):
+class RoomTypeBaseSchema(BaseModel):
     name: str = Field(min_length=10, max_length=40)
     base_price: int = Field(min=0)
     capacity: int = Field(min=0)
@@ -14,11 +14,11 @@ class RoomTypeResponseSchema(BaseModel):
     has_wifi: bool
 
 
-class RoomTypeResposeSchema(RoomTypeResponseSchema):
+class RoomTypeResposeSchema(RoomTypeBaseSchema):
     id: int
 
 
-class RoomTypeCreateSchema(RoomTypeResponseSchema):
+class RoomTypeCreateSchema(RoomTypeBaseSchema):
     pass
 
 
