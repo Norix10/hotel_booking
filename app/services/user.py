@@ -62,15 +62,15 @@ class UserService:
                 status_code=status.HTTP_404_NOT_FOUND, detail="User is not found"
             )
 
-        token_data = AccessTokenDataSchema(sub = user.email)
-        access_token = create_access_token(data = token_data)
+        token_data = AccessTokenDataSchema(sub=user.email)
+        access_token = create_access_token(data=token_data)
         return AuthResponse(access_token=access_token, token_type="bearer")
 
     async def update_user(
         self, user_id: UUID, user_data: UserUpdateSchema
     ) -> UserResponseSchema:
         user = await self._get_user_or_404(user_id)
-        for field, value in user_data.model_dump(exclude=True).items():
+        for field, value in user_data.model_dump(exclude_unset=True).items():
             setattr(user, field, value)
 
         updated_user = await self.user_repo.update(user)

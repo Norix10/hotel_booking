@@ -21,8 +21,10 @@ class RoomTypesService:
             )
         return room_type
 
-    async def get_all(self) -> list[RoomTypeResposeSchema]:
-        return await self.room_types_repo.get_all()
+    async def get_all(
+        self, skip: int = 0, limit: int = 100
+    ) -> list[RoomTypeResposeSchema]:
+        return await self.room_types_repo.get_all(skip=skip, limit=limit)
 
     async def create_room_type(
         self, data: RoomTypeCreateSchema
@@ -44,7 +46,7 @@ class RoomTypesService:
     ) -> RoomTypeResposeSchema:
         room_type = await self._get_room_type_or_404(room_type_int)
 
-        for field, value in room_type_data.model_dump(exclude=True).items():
+        for field, value in room_type_data.model_dump(exclude_unset=True).items():
             setattr(room_type, field, value)
 
         updated_room_type = await self.room_types_repo.update(room_type)

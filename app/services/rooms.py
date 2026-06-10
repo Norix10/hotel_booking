@@ -34,7 +34,7 @@ class RoomService:
     ) -> RoomResponseSchema:
         room = await self._get_room_or_404(room_id)
 
-        for field, value in room_data.model_dump(exclude=True).items():
+        for field, value in room_data.model_dump(exclude_unset=True).items():
             setattr(room, field, value)
 
         updated_room = await self.room_repo.update(room)

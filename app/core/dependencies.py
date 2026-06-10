@@ -45,13 +45,14 @@ def decode_token(token: str) -> dict:
         )
     return payload
 
+
 def get_entity_email_from_payload(payload: dict) -> str:
     email: str | None = payload.get("sub")
     if email is None:
         raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="Token payload invalid: missing 'sub' field",
-    )
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Token payload invalid: missing 'sub' field",
+        )
     return email
 
 

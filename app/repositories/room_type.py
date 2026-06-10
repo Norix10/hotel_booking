@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.repositories.base import BaseRepository
-from app.models.room_type import RoomType    
+from app.models.room_type import RoomType
 
 
 class RoomTypeRepository(BaseRepository[RoomType]):
