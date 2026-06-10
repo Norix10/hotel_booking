@@ -13,7 +13,6 @@ class PaymentBaseSchema(BaseModel):
 
 
 class PaymentCreateSchema(BaseModel):
-    booking_id: UUID
     amount: int = Field(ge=0)
     payment_method: PaymentMethodEnum
 
