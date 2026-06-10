@@ -4,7 +4,7 @@ from sqlalchemy import Integer, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
-from app.models.enums.booking_enum import BookingStatus
+from app.models.enums.booking_enum import BookingStatusEnum
 
 
 class Booking(Base):
@@ -17,7 +17,9 @@ class Booking(Base):
     )
     check_in: Mapped[datetime] = mapped_column(nullable=False)
     check_out: Mapped[datetime] = mapped_column(nullable=False)
-    status: Mapped[BookingStatus] = mapped_column(Enum(BookingStatus), nullable=False)
+    status: Mapped[BookingStatusEnum] = mapped_column(
+        Enum(BookingStatusEnum), nullable=False
+    )
 
     payment: Mapped[list["Payment"]] = relationship(
         back_populates="booking", cascade="all, delete-orphan"

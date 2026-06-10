@@ -1,13 +1,13 @@
 import enum
 
 
-class RoomBathroomType(enum.Enum):
+class RoomBathroomTypeEnum(enum.Enum):
     shower = "shower"
     bath = "bath"
     jacuzzi = "jacuzzi"
 
 
-class RoomStatusType(enum.Enum):
+class RoomStatusTypeEnum(enum.Enum):
     available = "available"
     cleaning = "cleaning"
     occupied = "occupied"

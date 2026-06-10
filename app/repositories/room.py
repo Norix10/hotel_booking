@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from app.repositories.base import BaseRepository
 from app.models.room import Room
-from app.models.enums.room_enum import RoomBathroomType, RoomStatusType
+from app.models.enums.room_enum import RoomBathroomTypeEnum, RoomStatusTypeEnum
 
 
 class RoomRepository(BaseRepository[Room]):
@@ -14,7 +14,7 @@ class RoomRepository(BaseRepository[Room]):
 
     async def get_availble_room(self) -> list[Room]:
         rooms = await self.session.execute(
-            select(Room).where(Room.status == RoomStatusType.available)
+            select(Room).where(Room.status == RoomStatusTypeEnum.available)
         )
         return rooms.scalars().all()
 

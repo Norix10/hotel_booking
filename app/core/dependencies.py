@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.db.database import get_db_session
 from app.utils.exceptions import NotFoundException, UnauthenticatedException
-from app.models.enums.user_enum import UserRole
+from app.models.enums.user_enum import UserRoleEnum
 
 from app.services.user import UserService
 
@@ -75,6 +75,6 @@ async def get_current_user(
 async def get_current_admin(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    if current_user.role != UserRole.admin:
+    if current_user.role != UserRoleEnum.admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
     return current_user

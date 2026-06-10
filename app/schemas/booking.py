@@ -3,7 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.models.enums.booking_enum import BookingStatus
+from app.schemas.payments import PaymentCreateSchema
+from app.models.enums.booking_enum import BookingStatusEnum
 
 
 class BookingExtraValidator:
@@ -32,6 +33,10 @@ class BookingCreateSchema(BookingDatesMixin, BookingExtraValidator):
     check_out: datetime
 
 
+class BookingWithPaymentCreateSchema(BookingCreateSchema, PaymentCreateSchema):
+    pass
+
+
 class BookingUpdateSchema(BookingDatesMixin, BookingExtraValidator):
     check_in: datetime | None = Field(default=None)
     check_out: datetime | None = Field(default=None)
@@ -42,7 +47,7 @@ class BookingAdminUpdateSchema(BookingDatesMixin, BookingExtraValidator):
     room_id: int | None = Field(default=None)
     check_in: datetime | None = Field(default=None)
     check_out: datetime | None = Field(default=None)
-    status: BookingStatus | None = Field(default=None)
+    status: BookingStatusEnum | None = Field(default=None)
 
 
 class BookingResponseSchema(BaseModel):
@@ -51,6 +56,6 @@ class BookingResponseSchema(BaseModel):
     room_id: int
     check_in: datetime
     check_out: datetime
-    status: BookingStatus
+    status: BookingStatusEnum
 
     model_config = ConfigDict(from_attributes=True, extra="forbid")
