@@ -11,9 +11,15 @@ from app.db.database import get_db_session
 from app.utils.exceptions import NotFoundException, UnauthenticatedException
 from app.models.enums.user_enum import UserRoleEnum
 
-from app.services.user import UserService
-
 from app.repositories.user import UserRepository
+from app.repositories.booking import BookingRepository
+from app.repositories.room import RoomRepository
+from app.repositories.payment import PaymentRepository
+
+from app.services.user import UserService
+from app.services.booking import BookingService
+from app.services.booking_payments import BookingPaymentService
+from app.services.payments import PaymentsService
 
 from app.models.user import User
 
@@ -30,6 +36,47 @@ async def get_user_service(
     user_repo: UserRepository = Depends(get_user_repo),
 ) -> UserService:
     return UserService(user_repo)
+
+
+async def get_booking_repo(
+    session: AsyncSession = Depends(get_db_session),
+) -> BookingRepository:
+    return BookingRepository(session)
+
+
+async def get_room_repo(
+    session: AsyncSession = Depends(get_db_session),
+) -> RoomRepository:
+    return RoomRepository(session)
+
+
+async def get_payment_repo(
+    session: AsyncSession = Depends(get_db_session),
+) -> PaymentRepository:
+    return PaymentRepository(session)
+
+
+async def get_booking_service(
+    booking_repo: BookingRepository = Depends(get_booking_repo),
+    room_repo: RoomRepository = Depends(get_room_repo),
+    payment_repo: PaymentRepository = Depends(get_payment_repo),
+) -> BookingService:
+    return BookingService(booking_repo, room_repo, payment_repo)
+
+
+async def get_payment_service(
+    payment_repo: PaymentRepository = Depends(get_payment_repo),
+    booking_repo: BookingRepository = Depends(get_booking_repo),
+) -> PaymentsService:
+    return PaymentsService(payment_repo, booking_repo)
+
+
+async def get_booking_payment_service(
+    booking_repo: BookingRepository = Depends(get_booking_repo),
+    payment_repo: PaymentRepository = Depends(get_payment_repo),
+    room_repo: RoomRepository = Depends(get_room_repo),
+) -> BookingPaymentService:
+    return BookingPaymentService(booking_repo, payment_repo, room_repo)
 
 
 def decode_token(token: str) -> dict:
