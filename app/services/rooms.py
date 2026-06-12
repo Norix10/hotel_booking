@@ -10,7 +10,7 @@ class RoomService:
         self.room_repo = room_repo
 
     async def get_all_rooms(self) -> list[RoomResponseSchema]:
-        await self.room_repo.get_all()
+        return await self.room_repo.get_all()
 
     async def _get_room_or_404(self, room_id: int) -> RoomResponseSchema:
         room = await self.room_repo.get_by_id(room_id)
@@ -30,7 +30,7 @@ class RoomService:
         return await self.room_repo.create(room)
 
     async def update_room(
-        self, room_id: int, room_data: RoomCreateSchema
+        self, room_id: int, room_data: RoomUpdateSchema
     ) -> RoomResponseSchema:
         room = await self._get_room_or_404(room_id)
 
