@@ -2,9 +2,14 @@ from fastapi import APIRouter, Depends, Security, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db_session
-from app.schemas.user import UserCreateSchema, UserResponseSchema, UserSignInSchema, UserUpdateSchema
+from app.schemas.user import (
+    UserCreateSchema,
+    UserResponseSchema,
+    UserSignInSchema,
+    UserUpdateSchema,
+)
 from app.schemas.auth import AuthResponse, AccessTokenDataSchema
-from app.core.dependencies import get_current_user, get_user_service
+from app.core.dependencies import get_current_user, get_user_service, get_current_admin
 from app.models.user import User
 from app.schemas.user import UserResponseSchema, UserCreateSchema
 from app.services.user import UserService
@@ -33,6 +38,14 @@ async def get_me(
     current_user: User = Security(get_current_user),
 ) -> User:
     return current_user
+
+
+@router.get("/users", response_model=list[UserResponseSchema])
+async def get_users_list(
+    current_admin: User = Security(get_current_admin),
+    user_service: UserService = Depends(get_user_service),
+) -> list[User]:
+    return await user_service.get_all_users()
 
 
 @router.patch("/", response_model=UserResponseSchema)

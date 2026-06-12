@@ -41,6 +41,9 @@ class UserService:
                 status_code=status.HTTP_409_CONFLICT, detail="Email is busy"
             )
 
+    async def get_all_users(self) -> list[UserResponseSchema]:
+        return self.user_repo.get_all_users()
+
     async def get_user_by_id(self, user_id: UUID) -> UserResponseSchema:
         user = await self._get_user_or_404(user_id)
         return UserResponseSchema.model_validate(user)
