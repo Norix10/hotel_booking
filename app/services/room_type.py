@@ -55,3 +55,6 @@ class RoomTypesService:
     async def delete_room_type(self, room_type_id: int):
         room_type = await self._get_room_type_or_404(room_type_id)
         return await self.room_types_repo.delete(room_type)
+
+    async def delete_all_room_types(self):
+        return await self.room_types_repo.delete_all()
