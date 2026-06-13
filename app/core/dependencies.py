@@ -15,11 +15,14 @@ from app.repositories.user import UserRepository
 from app.repositories.booking import BookingRepository
 from app.repositories.room import RoomRepository
 from app.repositories.payment import PaymentRepository
+from app.repositories.room_type import RoomTypeRepository
 
 from app.services.user import UserService
 from app.services.booking import BookingService
 from app.services.booking_payments import BookingPaymentService
+from app.services.room import RoomService
 from app.services.payments import PaymentsService
+from app.services.room_type import RoomTypesService
 
 from app.models.user import User
 
@@ -38,22 +41,26 @@ async def get_user_service(
     return UserService(user_repo)
 
 
-async def get_booking_repo(
-    session: AsyncSession = Depends(get_db_session),
-) -> BookingRepository:
-    return BookingRepository(session)
-
-
 async def get_room_repo(
     session: AsyncSession = Depends(get_db_session),
 ) -> RoomRepository:
     return RoomRepository(session)
 
 
+async def get_room_service(room_repo: RoomRepository = Depends(get_room_repo)):
+    return RoomService(room_repo)
+
+
 async def get_payment_repo(
     session: AsyncSession = Depends(get_db_session),
 ) -> PaymentRepository:
     return PaymentRepository(session)
+
+
+async def get_booking_repo(
+    session: AsyncSession = Depends(get_db_session),
+) -> BookingRepository:
+    return BookingRepository(session)
 
 
 async def get_booking_service(
@@ -77,6 +84,13 @@ async def get_booking_payment_service(
     room_repo: RoomRepository = Depends(get_room_repo),
 ) -> BookingPaymentService:
     return BookingPaymentService(booking_repo, payment_repo, room_repo)
+
+
+async def get_room_type_repo(session: AsyncSession = Depends(get_db_session)):
+    return RoomTypeRepository(session)
+
+async def get_room_type_service(room_types_repo: RoomRepository = Depends(get_room_type_repo)):
+    return RoomTypesService(room_types_repo)
 
 
 def decode_token(token: str) -> dict:
