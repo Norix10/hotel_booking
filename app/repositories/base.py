@@ -1,7 +1,7 @@
 from typing import Generic, TypeVar, Type
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from app.models.base import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -18,7 +18,7 @@ class BaseRepository(Generic[ModelType]):
         )
         return result.scalar_one_or_none()
 
-    async def get_all(self, skip: int = 0, limit: int = 100) -> list[ModelType]:
+    async def get_all(self, skip: int = 0, limit: int = 10) -> list[ModelType]:
         result = await self.session.execute(
             select(self.model).offset(skip).limit(limit)
         )
@@ -37,4 +37,8 @@ class BaseRepository(Generic[ModelType]):
 
     async def delete(self, obj: ModelType) -> None:
         await self.session.delete(obj)
+        await self.session.commit()
+
+    async def delete_all(self) -> None:
+        await self.session.execute(delete(self.model))
         await self.session.commit()
