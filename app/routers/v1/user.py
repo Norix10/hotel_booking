@@ -1,14 +1,13 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends, Security, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.database import get_db_session
 from app.schemas.user import (
     UserCreateSchema,
     UserResponseSchema,
     UserSignInSchema,
     UserUpdateSchema,
 )
-from app.schemas.auth import AuthResponse, AccessTokenDataSchema
+from app.schemas.auth import AuthResponse
 from app.core.dependencies import get_current_user, get_user_service, get_current_admin
 from app.models.user import User
 from app.schemas.user import UserResponseSchema, UserCreateSchema
@@ -36,7 +35,7 @@ async def signin(
 @router.get("/me", response_model=UserResponseSchema)
 async def get_me(
     current_user: User = Security(get_current_user),
-) -> User:
+) -> UserResponseSchema:
     return current_user
 
 
@@ -44,7 +43,7 @@ async def get_me(
 async def get_users_list(
     current_admin: User = Security(get_current_admin),
     user_service: UserService = Depends(get_user_service),
-) -> list[User]:
+) -> list[UserResponseSchema]:
     return await user_service.get_all_users()
 
 
@@ -57,9 +56,18 @@ async def update_me(
     return await user_service.update_user(current_user.id, data)
 
 
-@router.delete("/", status_code=status.HTTP_200_OK)
+@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_me(
     user_service: UserService = Depends(get_user_service),
     current_user: User = Security(get_current_user),
 ):
     return await user_service.delete_user(current_user.id)
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user_by_id(
+    user_id: UUID,
+    current_admin: User = Security(get_current_admin),
+    user_service: UserService = Depends(get_user_service),
+):
+    return await user_service.delete_user(user_id)
