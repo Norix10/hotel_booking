@@ -9,8 +9,10 @@ class RoomService:
     def __init__(self, room_repo: RoomRepository):
         self.room_repo = room_repo
 
-    async def get_all_rooms(self) -> list[RoomResponseSchema]:
-        return await self.room_repo.get_all()
+    async def get_all_rooms(
+        self, skip: int = 0, limit: int = 10
+    ) -> list[RoomResponseSchema]:
+        return await self.room_repo.get_all(skip, limit)
 
     async def _get_room_or_404(self, room_id: int) -> RoomResponseSchema:
         room = await self.room_repo.get_by_id(room_id)
