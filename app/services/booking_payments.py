@@ -27,7 +27,7 @@ class BookingPaymentService:
         self.room_repo = room_repo
 
     async def create_booking_with_payment(
-        self, data: BookingWithPaymentCreateSchema
+        self, user_id: UUID, data: BookingWithPaymentCreateSchema
     ) -> BookingResponseSchema:
         room = await self.room_repo.get_by_id(data.room_id)
         if room is None:
@@ -50,7 +50,7 @@ class BookingPaymentService:
                 )
 
         new_booking = Booking(
-            user_id=data.user_id,
+            user_id=user_id,
             room_id=data.room_id,
             check_in=data.check_in,
             check_out=data.check_out,
@@ -62,7 +62,7 @@ class BookingPaymentService:
             booking_id=new_booking.id,
             amount=data.amount,
             payment_method=data.payment_method,
-            payment_status=PaymentStatusEnum.pending,
+            payment_status=PaymentStatusEnum.success,
         )
         await self.payment_repo.create(new_payment)
         return BookingResponseSchema.model_validate(new_booking)

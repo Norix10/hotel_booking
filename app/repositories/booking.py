@@ -13,9 +13,11 @@ class BookingRepository(BaseRepository[Booking]):
     def __init__(self, session: AsyncSession):
         super().__init__(Booking, session)
 
-    async def get_by_user_id(self, user_id: UUID) -> list[Booking]:
+    async def get_by_user_id(
+        self, user_id: UUID, skip: int = 0, limit: int = 10
+    ) -> list[Booking]:
         result = await self.session.execute(
-            select(Booking).where(Booking.user_id == user_id)
+            select(Booking).where(Booking.user_id == user_id).offset(skip).limit(limit)
         )
         return result.scalars().all()
 
@@ -33,3 +35,11 @@ class BookingRepository(BaseRepository[Booking]):
             select(Booking).where(Booking.status != BookingStatusEnum.cancelled)
         )
         return result.scalars().all()
+
+    async def get_user_booking_by_booking_id(
+        self, user_id: UUID, booking_id: UUID
+    ) -> Booking:
+        result = await self.session.execute(
+            select(Booking).where(Booking.user_id == user_id, Booking.id == booking_id)
+        )
+        return result.scalar_one_or_none()

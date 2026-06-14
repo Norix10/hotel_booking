@@ -42,7 +42,8 @@ class UserService:
             )
 
     async def get_all_users(self) -> list[UserResponseSchema]:
-        return self.user_repo.get_all_users()
+        users = await self.user_repo.get_all_users()
+        return [UserResponseSchema.model_validate(user) for user in users]
 
     async def get_user_by_id(self, user_id: UUID) -> UserResponseSchema:
         user = await self._get_user_or_404(user_id)
