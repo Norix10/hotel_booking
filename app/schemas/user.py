@@ -16,7 +16,7 @@ class UserBaseSchema(BaseModel):
 
 class UserAuthValidatorShema(BaseModel):
     email: EmailStr = Field(examples=["user.userson@example.com"])
-    password: str = Field(min_length=8)
+    password: str = Field(examples=["Passw0rd!"], min_length=8)
 
     @field_validator("password")
     @classmethod
@@ -59,3 +59,5 @@ class UserResponseSchema(UserBaseSchema):
     id: UUID
     email: EmailStr = Field(examples=["user.userson@example.com"])
     active: bool
+
+    model_config = ConfigDict(from_attributes=True)
