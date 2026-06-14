@@ -10,13 +10,12 @@ from app.schemas.user import (
 from app.schemas.auth import AuthResponse
 from app.core.dependencies import get_current_user, get_user_service, get_current_admin
 from app.models.user import User
-from app.schemas.user import UserResponseSchema, UserCreateSchema
 from app.services.user import UserService
 
 router = APIRouter(prefix="/user", tags=["users"])
 
 
-@router.post("")
+@router.post("", response_model=UserResponseSchema)
 async def register(
     data: UserCreateSchema,
     user_service: UserService = Depends(get_user_service),
@@ -24,7 +23,7 @@ async def register(
     return await user_service.create_user(data)
 
 
-@router.post("/singin", response_model=AuthResponse)
+@router.post("/signin", response_model=AuthResponse)
 async def signin(
     data: UserSignInSchema,
     user_service: UserService = Depends(get_user_service),
@@ -61,7 +60,7 @@ async def delete_me(
     user_service: UserService = Depends(get_user_service),
     current_user: User = Security(get_current_user),
 ):
-    return await user_service.delete_user(current_user.id)
+    await user_service.delete_user(current_user.id)
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)

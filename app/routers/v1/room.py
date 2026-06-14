@@ -45,6 +45,7 @@ async def get_all_room(
 async def update_room(
     room_id: int,
     data: RoomUpdateSchema,
+    current_admin: User = Security(get_current_admin),
     room_service: RoomService = Depends(get_room_service),
 ):
     return await room_service.update_room(room_id, data)
@@ -53,6 +54,7 @@ async def update_room(
 @router.delete("/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_room(
     room_id: int,
+    current_admin: User = Security(get_current_admin),
     room_service: RoomService = Depends(get_room_service),
 ):
-    return await room_service.delete_room(room_id)
+    await room_service.delete_room(room_id)
