@@ -64,32 +64,38 @@ async def get_booking_repo(
 
 
 async def get_booking_service(
-    booking_repo: BookingRepository = Depends(get_booking_repo),
-    room_repo: RoomRepository = Depends(get_room_repo),
-    payment_repo: PaymentRepository = Depends(get_payment_repo),
+    session: AsyncSession = Depends(get_db_session),
 ) -> BookingService:
-    return BookingService(booking_repo, room_repo, payment_repo)
+    return BookingService(
+        BookingRepository(session),
+        RoomRepository(session),
+        PaymentRepository(session),
+    )
 
 
 async def get_payment_service(
-    payment_repo: PaymentRepository = Depends(get_payment_repo),
-    booking_repo: BookingRepository = Depends(get_booking_repo),
+    session: AsyncSession = Depends(get_db_session),
 ) -> PaymentsService:
-    return PaymentsService(payment_repo, booking_repo)
+    return PaymentsService(PaymentRepository(session), BookingRepository(session))
 
 
 async def get_booking_payment_service(
-    booking_repo: BookingRepository = Depends(get_booking_repo),
-    payment_repo: PaymentRepository = Depends(get_payment_repo),
-    room_repo: RoomRepository = Depends(get_room_repo),
+    session: AsyncSession = Depends(get_db_session),
 ) -> BookingPaymentService:
-    return BookingPaymentService(booking_repo, payment_repo, room_repo)
+    return BookingPaymentService(
+        BookingRepository(session),
+        PaymentRepository(session),
+        RoomRepository(session),
+    )
 
 
 async def get_room_type_repo(session: AsyncSession = Depends(get_db_session)):
     return RoomTypeRepository(session)
 
-async def get_room_type_service(room_types_repo: RoomRepository = Depends(get_room_type_repo)):
+
+async def get_room_type_service(
+    room_types_repo: RoomTypeRepository = Depends(get_room_type_repo),
+) -> RoomTypesService:
     return RoomTypesService(room_types_repo)
 
 
