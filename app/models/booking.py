@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Integer, ForeignKey, Enum
+from sqlalchemy import Integer, ForeignKey, Enum, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -15,8 +15,8 @@ class Booking(Base):
     room_id: Mapped[int] = mapped_column(
         ForeignKey("rooms.id", ondelete="CASCADE"), nullable=False
     )
-    check_in: Mapped[datetime] = mapped_column(nullable=False)
-    check_out: Mapped[datetime] = mapped_column(nullable=False)
+    check_in: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    check_out: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     status: Mapped[BookingStatusEnum] = mapped_column(
         Enum(BookingStatusEnum), nullable=False
     )

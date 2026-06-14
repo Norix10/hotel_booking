@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -15,6 +15,18 @@ class BookingDatesMixin(BaseModel):
     check_in: datetime | None = None
     check_out: datetime | None = None
 
+    @model_validator(mode="before")
+    def make_datetimes_aware(cls, values):
+        if not isinstance(values, dict):
+            return values
+
+        for field in ("check_in", "check_out"):
+            value = values.get(field)
+            if isinstance(value, datetime) and value.tzinfo is None:
+                values[field] = value.replace(tzinfo=timezone.utc)
+
+        return values
+
     @model_validator(mode="after")
     def validate_dates(self):
         if (
@@ -27,7 +39,6 @@ class BookingDatesMixin(BaseModel):
 
 
 class BookingCreateSchema(BookingDatesMixin, BookingExtraValidator):
-    user_id: UUID
     room_id: int
     check_in: datetime
     check_out: datetime

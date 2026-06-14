@@ -2,7 +2,7 @@ from sqlalchemy import String, Integer, Boolean, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
-from app.models.enums.room_enum import RoomBathroomTypeEnum
+from app.models.enums.room_enum import RoomBathroomTypeEnum, RoomBedTypeEnum
 
 
 class RoomType(Base):
@@ -10,9 +10,11 @@ class RoomType(Base):
     name: Mapped[str] = mapped_column(String(50), nullable=False)
     base_price: Mapped[int] = mapped_column(Integer, nullable=False)
     capacity: Mapped[int] = mapped_column(Integer, nullable=False)
-    bed_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    bed_type: Mapped[RoomBedTypeEnum] = mapped_column(
+        Enum(RoomBedTypeEnum, name="roombedtypeenum"), nullable=False
+    )
     bathroom_type: Mapped[RoomBathroomTypeEnum] = mapped_column(
-        Enum(RoomBathroomTypeEnum), nullable=False
+        Enum(RoomBathroomTypeEnum, name="roombathroomtypeenum"), nullable=False
     )
     area_sq_m: Mapped[int] = mapped_column(Integer, nullable=False)
     has_ac: Mapped[bool] = mapped_column(Boolean, nullable=False)  # air conditioner
