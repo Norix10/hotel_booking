@@ -20,3 +20,6 @@ class User(Base):
     bookings: Mapped[list["Booking"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    payment: Mapped[list["Payment"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
