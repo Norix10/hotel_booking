@@ -12,9 +12,12 @@ class RoomRepository(BaseRepository[Room]):
     def __init__(self, session: AsyncSession):
         super().__init__(Room, session)
 
-    async def get_availble_room(self) -> list[Room]:
+    async def get_availble_rooms(self, skip: int = 0, limit: int = 10) -> list[Room]:
         rooms = await self.session.execute(
-            select(Room).where(Room.status == RoomStatusTypeEnum.available)
+            select(Room)
+            .where(Room.status == RoomStatusTypeEnum.available)
+            .offset(skip)
+            .limit(limit)
         )
         return rooms.scalars().all()
 

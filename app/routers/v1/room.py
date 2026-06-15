@@ -41,6 +41,15 @@ async def get_all_room(
     return await room_service.get_all_rooms(skip, limit)
 
 
+@router.get("/available", response_model=list[RoomResponseSchema])
+async def get_available_rooms(
+    skip: int = 0,
+    limit: int = 10,
+    room_service: RoomService = Depends(get_room_service),
+) -> list[RoomResponseSchema]:
+    return await room_service.get_all_rooms(skip, limit)
+
+
 @router.patch("/{room_id}", response_model=RoomResponseSchema)
 async def update_room(
     room_id: int,
