@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import TypeVar
+from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -14,11 +14,20 @@ class BookingRepository(BaseRepository[Booking]):
         super().__init__(Booking, session)
 
     async def get_by_user_id(
-        self, user_id: UUID, skip: int = 0, limit: int = 10
+        self,
+        user_id: UUID,
+        status: Optional[BookingStatusEnum] = None,
+        skip: int = 0,
+        limit: int = 10,
     ) -> list[Booking]:
-        result = await self.session.execute(
-            select(Booking).where(Booking.user_id == user_id).offset(skip).limit(limit)
-        )
+        query = select(Booking).where(Booking.user_id == user_id)
+
+        if status is not None:
+            query = query.where(Booking.status == status)
+
+        query = query.offset(skip).limit(limit)
+
+        result = await self.session.execute(query)
         return result.scalars().all()
 
     async def get_by_room_id(self, room_id: int) -> list[Booking]:

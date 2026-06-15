@@ -1,4 +1,5 @@
 from uuid import UUID
+from typing import Optional
 from fastapi import HTTPException, status
 
 from app.repositories.booking import BookingRepository
@@ -68,6 +69,14 @@ class BookingService:
         updated_booking = await self.booking_repo.update(booking)
         return BookingResponseSchema.model_validate(updated_booking)
 
+    async def _update_booking_status_internal(
+        self, user_id: UUID, booking_id: UUID, booking_status: BookingStatusEnum
+    ) -> BookingResponseSchema:
+        booking = await self._get_user_booking_or_404(user_id, booking_id)
+        booking.status = booking_status
+        updated_booking = await self.booking_repo.update(booking)
+        return BookingResponseSchema.model_validate(updated_booking)
+
     async def create_booking(
         self, user_id: UUID, data: BookingCreateSchema
     ) -> BookingResponseSchema:
@@ -103,7 +112,7 @@ class BookingService:
         return BookingResponseSchema.model_validate(new_booking)
 
     async def get_all_bookings(
-        self, skip: int = 0, limit: int = 100
+        self, skip: int = 0, limit: int = 10
     ) -> list[BookingResponseSchema]:
         bookings = await self.booking_repo.get_all(skip=skip, limit=limit)
         return [BookingResponseSchema.model_validate(booking) for booking in bookings]
@@ -126,11 +135,13 @@ class BookingService:
         return BookingResponseSchema.model_validate(booking)
 
     async def get_all_user_bookings(
-        self, user_id: UUID, skip: int = 0, limit: int = 100
+        self,
+        user_id: UUID,
+        status: Optional[BookingStatusEnum] = None,
+        skip: int = 0,
+        limit: int = 10,
     ) -> list[BookingResponseSchema]:
-        bookings = await self.booking_repo.get_by_user_id(
-            user_id, skip=skip, limit=limit
-        )
+        bookings = await self.booking_repo.get_by_user_id(user_id, status, skip, limit)
         return [BookingResponseSchema.model_validate(booking) for booking in bookings]
 
     async def update_booking(
@@ -143,13 +154,19 @@ class BookingService:
     ) -> BookingResponseSchema:
         return await self._update_booking_internal(booking_id, data)
 
+    async def confirm_booking(
+        self, user_id: UUID, booking_id: UUID
+    ) -> BookingResponseSchema:
+        return await self._update_booking_status_internal(
+            user_id, booking_id, BookingStatusEnum.confirmed
+        )
+
     async def cancel_booking(
         self, user_id: UUID, booking_id: UUID
     ) -> BookingResponseSchema:
-        booking = await self._get_user_booking_or_404(user_id, booking_id)
-        booking.status = BookingStatusEnum.cancelled
-        updated_booking = await self.booking_repo.update(booking)
-        return BookingResponseSchema.model_validate(updated_booking)
+        return await self._update_booking_status_internal(
+            user_id, booking_id, BookingStatusEnum.cancelled
+        )
 
     async def delete_booking(self, user_id: UUID, booking_id: UUID):
         booking = await self._get_user_booking_or_404(user_id, booking_id)
@@ -160,6 +177,6 @@ class BookingService:
         await self.booking_repo.delete(booking)
 
     async def get_all_bookings_for_user(
-        self, user_id: UUID, skip: int = 0, limit: int = 100
+        self, user_id: UUID, skip: int = 0, limit: int = 10
     ) -> list[BookingResponseSchema]:
         return await self.get_all_user_bookings(user_id, skip=skip, limit=limit)
