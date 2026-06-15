@@ -34,13 +34,13 @@ async def create_payment(
 
 
 @router.get("/", response_model=list[PaymentResponseSchema])
-async def list_payments(
+async def get_my_payments(
+    current_user: User = Security(get_current_user),
     skip: int = 0,
     limit: int = 10,
-    current_admin: User = Security(get_current_admin),
     payment_service: PaymentsService = Depends(get_payment_service),
 ) -> list[PaymentResponseSchema]:
-    return await payment_service.get_all_payments(skip=skip, limit=limit)
+    return await payment_service.get_all_payments(current_user.id, skip, limit)
 
 
 @router.get("/{payment_id}", response_model=PaymentResponseSchema)

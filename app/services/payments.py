@@ -79,9 +79,9 @@ class PaymentsService:
         return PaymentResponseSchema.model_validate(payment)
 
     async def get_all_payments(
-        self, skip: int = 0, limit: int = 100
+        self, user_id: UUID, skip: int = 0, limit: int = 10
     ) -> list[PaymentResponseSchema]:
-        payments = await self.payment_repo.get_all(skip=skip, limit=limit)
+        payments = await self.payment_repo.get_all_user_payments(user_id, skip, limit)
         return [PaymentResponseSchema.model_validate(payment) for payment in payments]
 
     async def update_payment(

@@ -14,7 +14,15 @@ class PaymentRepository(BaseRepository[Payment]):
 
     async def get_by_booking_id(self, booking_id: UUID) -> Payment | None:
         result = await self.session.execute(
-            select(Payment).where(booking_id == Payment.booking_id)
+            select(Payment).where(Payment.booking_id == booking_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_all_user_payments(
+        self, user_id: UUID, skip: int = 0, limit: int = 10
+    ) -> list[Payment]:
+        result = await self.session.execute(
+            select(Payment).where(Payment.user_id == user_id).offset(skip).limit(limit)
         )
         return result.scalar_one_or_none()
 
