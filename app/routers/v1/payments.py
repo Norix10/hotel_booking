@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Security, status
 from app.schemas.payments import (
     PaymentCreateSchema,
     PaymentResponseSchema,
-    PaymentUpdateSchema,
+    PaymentFiltersSchema,
 )
 from app.core.dependencies import (
     get_payment_service,
@@ -36,36 +36,11 @@ async def create_payment(
 @router.get("/", response_model=list[PaymentResponseSchema])
 async def get_my_payments(
     current_user: User = Security(get_current_user),
+    filters: PaymentFiltersSchema = Depends(),
     skip: int = 0,
     limit: int = 10,
     payment_service: PaymentsService = Depends(get_payment_service),
 ) -> list[PaymentResponseSchema]:
-    return await payment_service.get_all_user_payments(current_user.id, skip, limit)
-
-
-@router.get("/{payment_id}", response_model=PaymentResponseSchema)
-async def get_payment(
-    payment_id: UUID,
-    current_admin: User = Security(get_current_admin),
-    payment_service: PaymentsService = Depends(get_payment_service),
-) -> PaymentResponseSchema:
-    return await payment_service.get_payment_by_id(payment_id)
-
-
-@router.patch("/{payment_id}", response_model=PaymentResponseSchema)
-async def update_payment(
-    payment_id: UUID,
-    data: PaymentUpdateSchema,
-    current_admin: User = Security(get_current_admin),
-    payment_service: PaymentsService = Depends(get_payment_service),
-) -> PaymentResponseSchema:
-    return await payment_service.update_payment(payment_id, data)
-
-
-@router.delete("/{payment_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_payment(
-    payment_id: UUID,
-    current_admin: User = Security(get_current_admin),
-    payment_service: PaymentsService = Depends(get_payment_service),
-):
-    await payment_service.delete_payment(payment_id)
+    return await payment_service.get_all_user_payments(
+        current_user.id, filters, skip, limit
+    )

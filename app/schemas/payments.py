@@ -12,7 +12,13 @@ class PaymentBaseSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class PaymentFiltersSchema(BaseModel):
+    payment_method: PaymentMethodEnum | None = Field(default=None)
+    payment_status: PaymentStatusEnum | None = Field(default=None)
+
+
 class PaymentCreateSchema(BaseModel):
+    user_id: UUID
     amount: int = Field(ge=0)
     payment_method: PaymentMethodEnum
 

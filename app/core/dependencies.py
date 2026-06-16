@@ -81,11 +81,13 @@ async def get_payment_service(
 
 async def get_booking_payment_service(
     session: AsyncSession = Depends(get_db_session),
+    booking_servive: BookingService = Depends(get_booking_service),
 ) -> BookingPaymentService:
     return BookingPaymentService(
         BookingRepository(session),
         PaymentRepository(session),
         RoomRepository(session),
+        booking_service = booking_servive
     )
 
 

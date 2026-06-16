@@ -54,7 +54,6 @@ class BookingUpdateSchema(BookingDatesMixin, BookingExtraValidator):
 
 
 class BookingAdminUpdateSchema(BookingDatesMixin, BookingExtraValidator):
-    user_id: UUID | None = Field(default=None)
     room_id: int | None = Field(default=None)
     check_in: datetime | None = Field(default=None)
     check_out: datetime | None = Field(default=None)
@@ -63,6 +62,7 @@ class BookingAdminUpdateSchema(BookingDatesMixin, BookingExtraValidator):
 
 class BookingAdminFilterSchema(BookingAdminUpdateSchema):
     pass
+
 
 class BookingResponseSchema(BaseModel):
     id: UUID

@@ -24,8 +24,17 @@ class RoomTypeCreateSchema(RoomTypeBaseSchema):
     pass
 
 
+class RoomTypeFilterSchema(BaseModel):
+    base_price: int | None = Field(default=None, min=0)
+    capacity: int | None = Field(default=None, min=0)
+    bed_type: RoomBedTypeEnum | None = Field(default=None)
+    bathroom_type: RoomBathroomTypeEnum | None = Field(default=None)
+    area_sq_m: int | None = Field(default=None, ge=3, le=40)
+    has_ac: bool | None = Field(default=None)
+    has_wifi: bool | None = Field(default=None)
+
+
 class RoomTypeUpdateSchema(BaseModel):
-    id: int | None = Field(default=None)
     name: str | None = Field(default=None, min_length=3, max_length=40)
     base_price: int | None = Field(default=None, min=0)
     capacity: int | None = Field(default=None, min=0)

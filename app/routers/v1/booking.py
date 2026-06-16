@@ -49,15 +49,6 @@ async def create_booking_with_payment(
     )
 
 
-@router.get("/{booking_id}", response_model=BookingResponseSchema)
-async def get_booking_by_id(
-    booking_id: UUID,
-    current_user: User = Security(get_current_user),
-    booking_service: BookingService = Depends(get_booking_service),
-) -> BookingResponseSchema:
-    return await booking_service.get_user_booking_by_id(current_user.id, booking_id)
-
-
 @router.get("/", response_model=list[BookingResponseSchema])
 async def get_my_booking_by_status(
     current_user: User = Security(get_current_user),
@@ -71,6 +62,15 @@ async def get_my_booking_by_status(
     )
 
 
+@router.get("/{booking_id}", response_model=BookingResponseSchema)
+async def get_booking_by_id(
+    booking_id: UUID,
+    current_user: User = Security(get_current_user),
+    booking_service: BookingService = Depends(get_booking_service),
+) -> BookingResponseSchema:
+    return await booking_service.get_user_booking_by_id(current_user.id, booking_id)
+
+
 @router.patch("/{booking_id}", response_model=BookingResponseSchema)
 async def update_booking(
     booking_id: UUID,
@@ -79,15 +79,6 @@ async def update_booking(
     booking_service: BookingService = Depends(get_booking_service),
 ) -> BookingResponseSchema:
     return await booking_service.update_booking(current_user.id, booking_id, data)
-
-
-@router.patch("/{booking_id}/confirm", response_model=BookingResponseSchema)
-async def confirm_booking(
-    booking_id: UUID,
-    current_user: User = Security(get_current_user),
-    booking_service: BookingService = Depends(get_booking_service),
-) -> BookingResponseSchema:
-    return await booking_service.confirm_booking(current_user.id, booking_id)
 
 
 @router.patch("/{booking_id}/cancel", response_model=BookingResponseSchema)

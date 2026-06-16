@@ -1,5 +1,6 @@
 from uuid import UUID
 from fastapi import HTTPException, status
+from typing import Optional
 
 from app.repositories.payment import PaymentRepository
 from app.repositories.booking import BookingRepository
@@ -7,6 +8,7 @@ from app.schemas.payments import (
     PaymentCreateSchema,
     PaymentResponseSchema,
     PaymentUpdateSchema,
+    PaymentFiltersSchema,
 )
 from app.models.payment import Payment
 from app.models.enums.payments_enum import PaymentStatusEnum
@@ -51,9 +53,13 @@ class PaymentsService:
         return PaymentResponseSchema.model_validate(payment)
 
     async def get_all_user_payments(
-        self, user_id: UUID, skip: int = 0, limit: int = 10
+        self,
+        user_id: UUID,
+        filters: Optional[PaymentFiltersSchema] = None,
+        skip: int = 0,
+        limit: int = 10,
     ) -> list[PaymentResponseSchema]:
-        payments = await self.payment_repo.get_all_user_payments(user_id, skip, limit)
+        payments = await self.payment_repo.get_all_user_payments(user_id, filters, skip, limit)
         return [PaymentResponseSchema.model_validate(payment) for payment in payments]
 
     async def admin_get_all_payments(

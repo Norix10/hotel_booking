@@ -1,7 +1,8 @@
 from uuid import UUID
 from typing import Optional
+from datetime import datetime
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from app.repositories.base import BaseRepository
 from app.schemas.booking import BookingAdminFilterSchema
@@ -13,6 +14,27 @@ from app.models.user import User
 class BookingRepository(BaseRepository[Booking]):
     def __init__(self, session: AsyncSession):
         super().__init__(Booking, session)
+
+    async def check_room_overlap(
+        self,
+        room_id: int,
+        check_in: datetime,
+        check_out: datetime,
+        exclude_booking_id: Optional[UUID] = None,
+    ) -> bool:
+        query = select(Booking).where(
+            Booking.room_id == room_id,
+            Booking.status != BookingStatusEnum.cancelled,
+            and_(check_in < Booking.check_out, check_out > Booking.check_in),
+        )
+
+        if exclude_booking_id is not None:
+            query = query.where(Booking.id != exclude_booking_id)
+
+        query = query.limit(1).with_for_update()
+
+        result = await self.session.execute(query)
+        return result.scalars().first() is not None
 
     async def get_by_user_id(
         self,

@@ -1,10 +1,12 @@
 from fastapi import HTTPException, status
+from typing import Optional
 
 from app.repositories.room_type import RoomTypeRepository
 from app.schemas.room_type import (
     RoomTypeCreateSchema,
     RoomTypeResposeSchema,
     RoomTypeUpdateSchema,
+    RoomTypeFilterSchema,
 )
 from app.models.room_type import RoomType
 
@@ -21,10 +23,13 @@ class RoomTypesService:
             )
         return room_type
 
-    async def get_all(
-        self, skip: int = 0, limit: int = 100
+    async def get_all_room_types(
+        self,
+        filters: Optional[RoomTypeFilterSchema] = None,
+        skip: int = 0,
+        limit: int = 100,
     ) -> list[RoomTypeResposeSchema]:
-        return await self.room_types_repo.get_all(skip=skip, limit=limit)
+        return await self.room_types_repo.get_room_types(filters, skip, limit)
 
     async def create_room_type(
         self, data: RoomTypeCreateSchema
