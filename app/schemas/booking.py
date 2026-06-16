@@ -61,11 +61,8 @@ class BookingAdminUpdateSchema(BookingDatesMixin, BookingExtraValidator):
     status: BookingStatusEnum | None = Field(default=None)
 
 
-class BookingFilterSchema(BookingDatesMixin):
-    user_id: UUID | None = Field(Ndefault=None)
-    room_id: int | None = Field(default=None)
-    status: BookingStatusEnum | None = Field(default=None)
-
+class BookingAdminFilterSchema(BookingAdminUpdateSchema):
+    pass
 
 class BookingResponseSchema(BaseModel):
     id: UUID

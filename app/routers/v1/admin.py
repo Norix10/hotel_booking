@@ -2,7 +2,11 @@ from uuid import UUID
 from typing import Optional
 from fastapi import APIRouter, Depends, Security, status, Query
 
-from app.schemas.booking import BookingResponseSchema, BookingAdminUpdateSchema
+from app.schemas.booking import (
+    BookingResponseSchema,
+    BookingAdminUpdateSchema,
+    BookingFilterSchema,
+)
 from app.schemas.payments import PaymentResponseSchema, PaymentUpdateSchema
 from app.core.dependencies import (
     get_current_admin,
@@ -22,18 +26,18 @@ async def get_booking_by_id(
     current_admin: User = Security(get_current_admin),
     booking_service: BookingService = Depends(get_booking_service),
 ) -> BookingResponseSchema:
-    return await booking_service.get_booking_by_id(booking_id)
+    return await booking_service.admin_get_booking_by_id(booking_id)
 
 
-# @router.get("/bookings/", response_model=list[BookingResponseSchema])
-# async def get_bookings(
-#     current_admin: User = Security(get_current_admin),
-#     booking_service: BookingService = Depends(get_booking_service),
-#     filters: Optional[BookingResponseSchema] = Query(...),
-#     skip: int = 0,
-#     limit: int = 10,
-# ) -> list[BookingResponseSchema]:
-#     pass
+@router.get("/bookings/", response_model=list[BookingResponseSchema])
+async def get_bookings(
+    filters: Optional[BookingFilterSchema] = Query(None),
+    skip: int = 0,
+    limit: int = 10,
+    current_admin: User = Security(get_current_admin),
+    booking_service: BookingService = Depends(get_booking_service),
+) -> list[BookingResponseSchema]:
+    return await booking_service.admin_get_all_bookings(filters, skip, limit)
 
 
 @router.get("/payments/", response_model=list[PaymentResponseSchema])
@@ -43,7 +47,7 @@ async def list_payments(
     current_admin: User = Security(get_current_admin),
     payment_service: PaymentsService = Depends(get_payment_service),
 ) -> list[PaymentResponseSchema]:
-    return await payment_service.get_all_payments(skip=skip, limit=limit)
+    return await payment_service.admin_get_all_payments(skip=skip, limit=limit)
 
 
 @router.patch("/bookings/{booking_id}", response_model=BookingResponseSchema)

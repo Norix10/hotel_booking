@@ -11,6 +11,7 @@ from app.schemas.booking import (
     BookingUpdateSchema,
     BookingAdminUpdateSchema,
     BookingResponseSchema,
+    BookingAdminFilterSchema,
 )
 from app.models.booking import Booking
 from app.models.enums.booking_enum import BookingStatusEnum
@@ -77,6 +78,45 @@ class BookingService:
         updated_booking = await self.booking_repo.update(booking)
         return BookingResponseSchema.model_validate(updated_booking)
 
+    # -----------------------------------------------
+
+    async def get_user_booking_by_id(
+        self, user_id: UUID, booking_id: UUID
+    ) -> BookingResponseSchema:
+        booking = await self.booking_repo.get_user_booking_by_booking_id(
+            user_id, booking_id
+        )
+        if not booking:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Booking not found",
+            )
+        return BookingResponseSchema.model_validate(booking)
+
+    async def admin_get_booking_by_id(self, booking_id: UUID) -> BookingResponseSchema:
+        booking = await self._get_booking_or_404(booking_id)
+        return BookingResponseSchema.model_validate(booking)
+
+    async def get_all_user_bookings(
+        self,
+        user_id: UUID,
+        status: Optional[BookingStatusEnum] = None,
+        skip: int = 0,
+        limit: int = 10,
+    ) -> list[BookingResponseSchema]:
+        bookings = await self.booking_repo.get_by_user_id(user_id, status, skip, limit)
+        return [BookingResponseSchema.model_validate(booking) for booking in bookings]
+
+    async def admin_get_all_bookings(
+        self,
+        filters: Optional[BookingAdminFilterSchema] = None,
+        skip: int = 0,
+        limit: int = 10,
+    ) -> list[BookingResponseSchema]:
+        bookings = await self.booking_repo.get_all_bookings(filters, skip, limit)
+        return [BookingResponseSchema.model_validate(booking) for booking in bookings]
+
+
     async def create_booking(
         self, user_id: UUID, data: BookingCreateSchema
     ) -> BookingResponseSchema:
@@ -111,39 +151,6 @@ class BookingService:
 
         return BookingResponseSchema.model_validate(new_booking)
 
-    async def get_all_bookings(
-        self, skip: int = 0, limit: int = 10
-    ) -> list[BookingResponseSchema]:
-        bookings = await self.booking_repo.get_all(skip=skip, limit=limit)
-        return [BookingResponseSchema.model_validate(booking) for booking in bookings]
-
-    async def get_booking_by_id(self, booking_id: UUID) -> BookingResponseSchema:
-        booking = await self._get_booking_or_404(booking_id)
-        return BookingResponseSchema.model_validate(booking)
-
-    async def get_user_booking_by_id(
-        self, user_id: UUID, booking_id: UUID
-    ) -> BookingResponseSchema:
-        booking = await self.booking_repo.get_user_booking_by_booking_id(
-            user_id, booking_id
-        )
-        if not booking:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Booking not found",
-            )
-        return BookingResponseSchema.model_validate(booking)
-
-    async def get_all_user_bookings(
-        self,
-        user_id: UUID,
-        status: Optional[BookingStatusEnum] = None,
-        skip: int = 0,
-        limit: int = 10,
-    ) -> list[BookingResponseSchema]:
-        bookings = await self.booking_repo.get_by_user_id(user_id, status, skip, limit)
-        return [BookingResponseSchema.model_validate(booking) for booking in bookings]
-
     async def update_booking(
         self, user_id: UUID, booking_id: UUID, data: BookingUpdateSchema
     ) -> BookingResponseSchema:
@@ -168,15 +175,6 @@ class BookingService:
             user_id, booking_id, BookingStatusEnum.cancelled
         )
 
-    async def delete_booking(self, user_id: UUID, booking_id: UUID):
-        booking = await self._get_user_booking_or_404(user_id, booking_id)
-        await self.booking_repo.delete(booking)
-
     async def admin_delete_booking(self, booking_id: UUID):
         booking = await self._get_booking_or_404(booking_id)
         await self.booking_repo.delete(booking)
-
-    async def get_all_bookings_for_user(
-        self, user_id: UUID, skip: int = 0, limit: int = 10
-    ) -> list[BookingResponseSchema]:
-        return await self.get_all_user_bookings(user_id, skip=skip, limit=limit)

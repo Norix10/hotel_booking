@@ -97,12 +97,3 @@ async def cancel_booking(
     booking_service: BookingService = Depends(get_booking_service),
 ) -> BookingResponseSchema:
     return await booking_service.cancel_booking(current_user.id, booking_id)
-
-
-@router.delete("/{booking_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_booking(
-    booking_id: UUID,
-    current_user: User = Security(get_current_user),
-    booking_service: BookingService = Depends(get_booking_service),
-):
-    await booking_service.delete_booking(current_user.id, booking_id)

@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.repositories.base import BaseRepository
+from app.schemas.booking import BookingAdminFilterSchema
 from app.models.enums.booking_enum import BookingStatusEnum
 from app.models.booking import Booking
 from app.models.user import User
@@ -24,6 +25,34 @@ class BookingRepository(BaseRepository[Booking]):
 
         if status is not None:
             query = query.where(Booking.status == status)
+
+        query = query.offset(skip).limit(limit)
+
+        result = await self.session.execute(query)
+        return result.scalars().all()
+
+    async def get_all_bookings(
+        self,
+        filters: Optional[BookingAdminFilterSchema] = None,
+        skip: int = 0,
+        limit: int = 10,
+    ) -> list[Booking]:
+        query = select(Booking)
+
+        if filters is not None:
+            filter_dict = filters.model_dump(exclude_none=True)
+
+        check_in_val = filter_dict.pop("check_in", None)
+        check_out_val = filter_dict.pop("check_out", None)
+
+        for field_name, value in filter_dict.items():
+            if hasattr(Booking, field_name):
+                query = query.where(getattr(Booking, field_name) == value)
+
+        if check_in_val is not None:
+            query = query.where(Booking.check_in >= check_in_val)
+        if check_out_val is not None:
+            query = query.where(Booking.check_out <= check_out_val)
 
         query = query.offset(skip).limit(limit)
 
