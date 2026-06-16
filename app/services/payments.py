@@ -44,6 +44,24 @@ class PaymentsService:
                 detail="This booking already has a payment",
             )
 
+    # ---------------------------------------------------------
+
+    async def get_payment_by_id(self, payment_id: UUID) -> PaymentResponseSchema:
+        payment = await self._get_payment_or_404(payment_id)
+        return PaymentResponseSchema.model_validate(payment)
+
+    async def get_all_user_payments(
+        self, user_id: UUID, skip: int = 0, limit: int = 10
+    ) -> list[PaymentResponseSchema]:
+        payments = await self.payment_repo.get_all_user_payments(user_id, skip, limit)
+        return [PaymentResponseSchema.model_validate(payment) for payment in payments]
+
+    async def admin_get_all_payments(
+        self, skip: int = 0, limit: int = 10
+    ) -> list[PaymentResponseSchema]:
+        payments = await self.payment_repo.get_all_payments(skip, limit)
+        return [PaymentResponseSchema.model_validate(payment) for payment in payments]
+
     async def create_payment(
         self,
         booking_id: UUID,
@@ -73,16 +91,6 @@ class PaymentsService:
         )
         new_payment = await self.payment_repo.create(new_payment)
         return PaymentResponseSchema.model_validate(new_payment)
-
-    async def get_payment_by_id(self, payment_id: UUID) -> PaymentResponseSchema:
-        payment = await self._get_payment_or_404(payment_id)
-        return PaymentResponseSchema.model_validate(payment)
-
-    async def get_all_payments(
-        self, user_id: UUID, skip: int = 0, limit: int = 10
-    ) -> list[PaymentResponseSchema]:
-        payments = await self.payment_repo.get_all_user_payments(user_id, skip, limit)
-        return [PaymentResponseSchema.model_validate(payment) for payment in payments]
 
     async def update_payment(
         self, payment_id: UUID, data: PaymentUpdateSchema

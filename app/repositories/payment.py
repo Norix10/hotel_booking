@@ -24,8 +24,13 @@ class PaymentRepository(BaseRepository[Payment]):
         result = await self.session.execute(
             select(Payment).where(Payment.user_id == user_id).offset(skip).limit(limit)
         )
-        return result.scalar_one_or_none()
+        return result.scalars().all()
 
+    async def get_all_payments(self, skip: int = 0, limit: int = 10) -> list[Payment]:
+        result = await self.session.execute(select(Payment).offset(skip).limit(limit))
+        return result.scalars().all()
+
+    # __________________________________________________
     async def get_success_status(self) -> list[Payment]:
         result = await self.session.execute(
             select(Payment).where(Payment.payment_status == PaymentStatusEnum.success)

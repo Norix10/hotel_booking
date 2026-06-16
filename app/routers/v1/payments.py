@@ -40,7 +40,7 @@ async def get_my_payments(
     limit: int = 10,
     payment_service: PaymentsService = Depends(get_payment_service),
 ) -> list[PaymentResponseSchema]:
-    return await payment_service.get_all_payments(current_user.id, skip, limit)
+    return await payment_service.get_all_user_payments(current_user.id, skip, limit)
 
 
 @router.get("/{payment_id}", response_model=PaymentResponseSchema)
