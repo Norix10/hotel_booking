@@ -48,7 +48,6 @@ def upgrade() -> None:
     )
     op.create_table('rooms',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('room_number', sa.Integer(), nullable=False),
     sa.Column('room_type_id', sa.Integer(), nullable=False),
     sa.Column('status', sa.Enum('available', 'cleaning', 'occupied', name='roomstatustype'), nullable=False),
     sa.Column('floor', sa.Integer(), nullable=False),
@@ -72,9 +71,9 @@ def upgrade() -> None:
     op.create_table('payments',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('booking_id', sa.Uuid(), nullable=False),
-    sa.Column('amout', sa.Integer(), nullable=False),
+    sa.Column('amount', sa.Integer(), nullable=False),
     sa.Column('payment_method', sa.Enum('card', 'cash', name='paymentmethodenum'), nullable=False),
-    sa.Column('payment_status', sa.Enum('success', 'failed', 'refunded', name='paymentstatusenum'), nullable=False),
+    sa.Column('payment_status', sa.Enum('success', 'failed', 'refunded', 'pending', name='paymentstatusenum'), nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['booking_id'], ['bookings.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')

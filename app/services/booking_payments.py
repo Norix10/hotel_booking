@@ -39,6 +39,17 @@ class BookingPaymentService:
             data.room_id, data.check_in, data.check_out
         )
 
+        room = await self.room_repo.get_with_type(data.room_id)
+        if not room:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Room not found",
+            )
+        days = (data.check_out - data.check_in).days
+        if days <= 0:
+            days = 1
+        calculated_amount = days * room.room_types.base_price
+
         new_booking = Booking(
             user_id=user_id,
             room_id=data.room_id,
@@ -51,7 +62,7 @@ class BookingPaymentService:
         new_payment = Payment(
             booking_id=new_booking.id,
             user_id=user_id,
-            amount=data.amount,
+            amount=calculated_amount,
             payment_method=data.payment_method,
             payment_status=PaymentStatusEnum.success,
         )

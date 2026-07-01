@@ -6,19 +6,16 @@ from app.schemas.payments import (
     PaymentResponseSchema,
     PaymentFiltersSchema,
 )
-from app.core.dependencies import (
-    get_payment_service,
-    get_current_user,
-    get_current_admin,
-)
+from app.core.dependencies import get_payment_service, get_current_user
 from app.models.user import User
 from app.services.payments import PaymentsService
+from app.tasks.payment_tasks import *
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
 
 @router.post(
-    "/bookings/{booking_id}",
+    "/{booking_id}",
     response_model=PaymentResponseSchema,
     status_code=status.HTTP_201_CREATED,
 )
@@ -28,9 +25,11 @@ async def create_payment(
     current_user: User = Security(get_current_user),
     payment_service: PaymentsService = Depends(get_payment_service),
 ) -> PaymentResponseSchema:
-    return await payment_service.create_payment(
+    payment = await payment_service.create_payment(
         booking_id, data, user_id=current_user.id
     )
+    process_payment_bg.delay(current_user.id, booking_id)
+    return payment
 
 
 @router.get("/", response_model=list[PaymentResponseSchema])

@@ -17,6 +17,7 @@ from app.models.user import User
 from app.models.enums.booking_enum import BookingStatusEnum
 from app.services.booking import BookingService
 from app.services.booking_payments import BookingPaymentService
+from app.tasks.payment_tasks import process_payment_bg
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
 
@@ -44,9 +45,11 @@ async def create_booking_with_payment(
         get_booking_payment_service
     ),
 ) -> BookingResponseSchema:
-    return await booking_payment_service.create_booking_with_payment(
+    booking_payment = await booking_payment_service.create_booking_with_payment(
         current_user.id, data
     )
+    process_payment_bg.delay(current_user.id, booking_payment.id)
+    return booking_payment
 
 
 @router.get("/", response_model=list[BookingResponseSchema])

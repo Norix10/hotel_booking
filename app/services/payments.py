@@ -59,7 +59,9 @@ class PaymentsService:
         skip: int = 0,
         limit: int = 10,
     ) -> list[PaymentResponseSchema]:
-        payments = await self.payment_repo.get_all_user_payments(user_id, filters, skip, limit)
+        payments = await self.payment_repo.get_all_user_payments(
+            user_id, filters, skip, limit
+        )
         return [PaymentResponseSchema.model_validate(payment) for payment in payments]
 
     async def admin_get_all_payments(
@@ -74,7 +76,14 @@ class PaymentsService:
         data: PaymentCreateSchema,
         user_id: UUID | None = None,
     ) -> PaymentResponseSchema:
-        booking = await self._get_booking_or_404(booking_id)
+        booking = await self.booking_repo.get_with_room_and_type(booking_id)
+
+        if not booking:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Booking not found",
+            )
+
         if user_id is not None and booking.user_id != user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -89,11 +98,18 @@ class PaymentsService:
                 detail="Cannot create payment for cancelled booking",
             )
 
+        days = (booking.check_out - booking.check_in).days
+        if days <= 0:
+            days = 1
+
+        calculated_amount = days * booking.room.room_types.base_price
+
         new_payment = Payment(
             booking_id=booking_id,
-            amount=data.amount,
+            user_id=user_id,
+            amount=calculated_amount,
             payment_method=data.payment_method,
-            payment_status=PaymentStatusEnum.pending,
+            payment_status=PaymentStatusEnum.success,
         )
         new_payment = await self.payment_repo.create(new_payment)
         return PaymentResponseSchema.model_validate(new_payment)
