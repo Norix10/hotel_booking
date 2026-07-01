@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30  # 30 days
 
     DB_URL: str
+    SYNC_DB_URL: str
+    REDIS_URL: str
     SECRET_KEY: str
     ECHO: bool = False
 

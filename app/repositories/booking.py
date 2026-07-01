@@ -1,19 +1,45 @@
 from uuid import UUID
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from app.repositories.base import BaseRepository
 from app.schemas.booking import BookingAdminFilterSchema
 from app.models.enums.booking_enum import BookingStatusEnum
 from app.models.booking import Booking
-from app.models.user import User
+from app.models.room import Room
 
 
 class BookingRepository(BaseRepository[Booking]):
     def __init__(self, session: AsyncSession):
         super().__init__(Booking, session)
+
+    async def get_expired_pending_bookins(self, expiration_minutes: int):
+        time = datetime.utcnow() - timedelta(minutes=expiration_minutes)
+        query = select(Booking).where(
+            Booking.status == BookingStatusEnum.pending, Booking.created_at <= time
+        )
+        result = await self.session.execute(query)
+        return result.scalars().all()
+
+    async def get_bookings_for_date(self, target_date: date):
+        query = select(Booking).where(
+            Booking.status == BookingStatusEnum.confirmed,
+            Booking.check_in == target_date,
+        )
+        result = await self.session.execute(query)
+        return result.scalars().all()
+
+    async def get_with_room_and_type(self, booking_id: UUID) -> Booking | None:
+        query = (
+            select(Booking)
+            .where(Booking.id == booking_id)
+            .options(joinedload(Booking.room).joinedload(Room.room_type))
+        )
+        result = await self.session.execute(query)
+        return result.scalar_or_none()
 
     async def check_room_overlap(
         self,

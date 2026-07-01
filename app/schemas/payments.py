@@ -18,8 +18,6 @@ class PaymentFiltersSchema(BaseModel):
 
 
 class PaymentCreateSchema(BaseModel):
-    user_id: UUID
-    amount: int = Field(ge=0)
     payment_method: PaymentMethodEnum
 
     model_config = ConfigDict(extra="forbid")

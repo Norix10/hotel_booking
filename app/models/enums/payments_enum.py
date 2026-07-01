@@ -10,3 +10,4 @@ class PaymentStatusEnum(enum.Enum):
     success = "success"
     failed = "failed"
     refunded = "refunded"
+    pending = "pending"
