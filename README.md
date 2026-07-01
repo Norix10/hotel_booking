@@ -1,14 +1,16 @@
 # Hotel Booking API
 
-A lightweight FastAPI-based hotel booking backend with user authentication, async SQLAlchemy database access, and a modular repository-service architecture.
+A FastAPI-based hotel booking backend with JWT authentication, async SQLAlchemy, Alembic migrations, and background payment processing via Celery and Redis.
 
 ## 🚀 Overview
 
-This project implements a basic backend for a hotel room booking system. It focuses on:
+This project implements a hotel booking system with:
 - user registration and authentication,
 - JWT-protected endpoints,
-- asynchronous database access using SQLAlchemy Async,
-- separation of concerns across routers, services, and repositories.
+- room and room-type management,
+- booking creation, filtering, update, cancellation and confirmation,
+- payment creation with asynchronous background confirmation,
+- Docker-based local development with PostgreSQL, Redis and Celery workers.
 
 ## 🧩 Technologies
 
@@ -17,243 +19,209 @@ This project implements a basic backend for a hotel room booking system. It focu
 - SQLAlchemy 2.x (async)
 - Alembic
 - PostgreSQL / asyncpg
+- Redis
+- Celery
 - PyJWT
 - bcrypt
 - pydantic v2
 - Uvicorn
+- Docker / Docker Compose
 
 ## 🏗️ Architecture
 
-The project follows a **layered repository-service architecture**:
+The project follows a layered architecture:
 
-- **Routers** (`app/routers/v1/`) — HTTP endpoint handlers, dependency injection, request validation
-- **Services** (`app/services/`) — business logic, orchestration, validation rules
-- **Repositories** (`app/repositories/`) — data access layer, async query execution
-- **Models** (`app/models/`) — SQLAlchemy ORM definitions with enums
-- **Schemas** (`app/schemas/`) — Pydantic models for request/response validation with ORM support
-- **Core** (`app/core/`) — configuration, dependencies, security utilities
-
-This separation ensures testability, reusability, and maintainability.
+- Routers — HTTP endpoints and request validation
+- Services — business logic and orchestration
+- Repositories — database access and query composition
+- Models — SQLAlchemy ORM entities and enums
+- Schemas — Pydantic request/response models
+- Core — configuration, dependencies, security, Celery setup
 
 ## 📁 Project Structure
 
-- `app/main.py` — FastAPI application and router registration.
-- `app/routers/` — HTTP routes (API endpoints).
-- `app/services/` — business logic.
-- `app/repositories/` — database access layer.
-- `app/models/` — SQLAlchemy ORM models.
-- `app/schemas/` — Pydantic schemas for validation and serialization.
-- `app/db/database.py` — async database session configuration.
-- `app/core/dependencies.py` — FastAPI dependencies and DI for repositories and services.
-- `app/core/config.py` — configuration via `.env`.
+- app/main.py — FastAPI app initialization
+- app/routers/ — API routers
+- app/services/ — business logic
+- app/repositories/ — repository layer
+- app/models/ — ORM models and enums
+- app/schemas/ — request/response schemas
+- app/tasks/ — Celery background tasks
+- docker-compose.yml — local services stack
+- Dockerfile — application image
 
 ## 📦 Installation
+
+### Local
 
 ```bash
 poetry install
 ```
 
-## 🔧 Environment Configuration
+### Docker
 
-Create a `.env` file in the project root with the following values:
-
-```env
-DB_URL=postgresql+asyncpg://user:password@localhost:5432/dbname
-SECRET_KEY=your-secret-key
-ECHO=False
+```bash
+docker compose up --build
 ```
 
-- `DB_URL` — database connection string.
-- `SECRET_KEY` — secret key for signing JWT tokens.
-- `ECHO` — enable SQL query logging (True/False).
+This starts:
+- PostgreSQL on port 5432
+- Redis on port 6379
+- FastAPI app on port 8000
+- Celery worker
+- Celery beat
+
+## 🔧 Environment Configuration
+
+Create a `.env` file in the project root:
+
+```env
+DB_URL=postgresql+asyncpg://hotel_user:hotel_password@db:5432/hotel_db
+SECRET_KEY=your-secret-key
+ECHO=False
+REDIS_URL=redis://redis_broker:6379/0
+```
 
 ## ⚡ Running the App
+
+### Locally
 
 ```bash
 poetry run uvicorn app.main:app --reload
 ```
 
-By default, the application will run at `http://127.0.0.1:8000`.
+### With Docker
+
+```bash
+docker compose up
+```
+
+The application will be available at http://127.0.0.1:8000.
+
+## 🩺 Health Check
+
+```bash
+GET /health
+```
+
+Returns database connectivity status.
 
 ## 📌 Available API Routes
 
 All routes are available under the prefix `/api/v1`.
 
-### Auth & User
+### Auth & Users
 
-- `POST /api/v1/user` — register a new user
-  - Request body:
-    - `name` — user name
-    - `email` — user email
-    - `password` — password
-
-- `POST /api/v1/user/signin` — sign in
-  - Request body:
-    - `email`
-    - `password`
-  - Response:
-    - `access_token`
-    - `token_type`
-
+- `POST /api/v1/user` — register a user
+- `POST /api/v1/user/signin` — sign in and receive a JWT
 - `GET /api/v1/user/me` — get current user profile
-  - Requires header `Authorization: Bearer <token>`
-
 - `PATCH /api/v1/user/` — update current user
-  - Requires token
-  - You can update `name`, `email`, and `password`
-
-- `DELETE /api/v1/user/` — delete current user account
-  - Requires token
-
+- `DELETE /api/v1/user/` — delete current user
 - `GET /api/v1/user/users` — list all users (admin only)
-  - Requires admin token
 
 ### Room Types
 
-- `GET /api/v1/room-types/all` — list all room types
-
-- `GET /api/v1/room-types/{room_type_id}` — get room type by ID
-
-- `POST /api/v1/room-types` — create new room type (admin only)
-  - Request body:
-    - `name` — room type name
-    - `price_per_night` — price per night (float)
-    - `bed_type` — bed type enum (single, double, queen, king, twin, sofa, bunk)
-
-- `PATCH /api/v1/room-types/{room_type_id}` — update room type (admin only)
+- `GET /api/v1/room-types/` — list room types
+- `GET /api/v1/room-types/{room_type_id}` — get a room type by ID
+- `POST /api/v1/room-types/` — create a room type (admin)
+- `PATCH /api/v1/room-types/{room_type_id}` — update a room type (admin)
+- `DELETE /api/v1/room-types/{room_type_id}` — delete a room type (admin)
 
 ### Rooms
 
-- `GET /api/v1/room/all` — list all rooms
-
+- `GET /api/v1/room/` — list rooms
 - `GET /api/v1/room/{room_id}` — get room by ID
-
-- `POST /api/v1/room` — create new room (admin only)
-  - Request body:
-    - `room_number` — room number (string)
-    - `room_type_id` — room type ID (int)
-
-- `PATCH /api/v1/room/{room_id}` — update room (admin only)
+- `POST /api/v1/room/` — create a room (admin)
+- `PATCH /api/v1/room/{room_id}` — update a room (admin)
+- `DELETE /api/v1/room/{room_id}` — delete a room (admin)
 
 ### Bookings
 
-- `POST /api/v1/booking` — create new booking
-  - Requires token
-  - Request body:
-    - `room_id` — room ID (int)
-    - `check_in` — check-in datetime (ISO 8601, will be converted to UTC if naive)
-    - `check_out` — check-out datetime (ISO 8601, will be converted to UTC if naive)
-
-- `GET /api/v1/booking/{booking_id}` — get booking by ID
-  - Requires token (user can only see their own booking)
-
-- `GET /api/v1/booking/user/bookings` — list current user's bookings
-  - Requires token
-
-- `PATCH /api/v1/booking/{booking_id}` — update booking
-  - Requires token (user can only update their own)
-
-- `DELETE /api/v1/booking/{booking_id}` — cancel booking
-  - Requires token (user can only delete their own)
+- `POST /api/v1/bookings/` — create a booking
+- `POST /api/v1/bookings/with-payment` — create a booking and queue payment processing
+- `GET /api/v1/bookings/` — list current user bookings, optionally filtered by status via `?status=pending`
+- `GET /api/v1/bookings/{booking_id}` — get booking by ID
+- `PATCH /api/v1/bookings/{booking_id}` — update a booking
+- `PATCH /api/v1/bookings/{booking_id}/cancel` — cancel a booking
 
 ### Payments
 
-- `POST /api/v1/payments` — create payment for booking
-  - Requires token
-  - Request body:
-    - `booking_id` — booking ID (UUID)
-    - `payment_method` — payment method (card, bank_transfer, cash)
-
+- `POST /api/v1/payments/bookings/{booking_id}` — create a payment for a booking
+- `GET /api/v1/payments/` — list payments for the current user
 - `GET /api/v1/payments/{payment_id}` — get payment by ID
+- `PATCH /api/v1/payments/{payment_id}` — update payment (admin)
+- `DELETE /api/v1/payments/{payment_id}` — delete payment (admin)
 
-### Admin Routes
+### Admin
 
-- `GET /api/v1/admin/users` — list all users (admin only)
+- `PATCH /api/v1/admin/bookings/{booking_id}` — admin booking update
+- `DELETE /api/v1/admin/bookings/{booking_id}` — admin booking delete
+- `PATCH /api/v1/admin/payments/{payment_id}` — admin payment update
+- `DELETE /api/v1/admin/payments/{payment_id}` — admin payment delete
 
-- `PATCH /api/v1/admin/users/{user_id}` — update user (admin only)
-
-## 📚 Supported Models
+## 📚 Main Models
 
 ### User
-
-- `id` — UUID (primary key)
-- `name` — user name (string)
-- `email` — unique user email
-- `hashed_password` — bcrypt hashed password
-- `role` — user role enum (user, admin)
-- `active` — account active flag (boolean)
+- id — UUID
+- email — unique email
+- password hash — bcrypt hashed
+- role — user/admin
 
 ### RoomType
-
-- `id` — primary key (int, auto-increment)
-- `name` — room type name (string)
-- `price_per_night` — price per night (float)
-- `bed_type` — bed type enum (single, double, queen, king, twin, sofa, bunk)
+- id — int
+- name — string
+- base_price — int
+- capacity — int
+- bed_type — enum
+- bathroom_type — enum
+- area_sq_m — int
+- has_ac — bool
+- has_wifi — bool
 
 ### Room
-
-- `id` — primary key (int, auto-increment)
-- `room_number` — room number (string)
-- `room_type_id` — foreign key to RoomType
-- `status` — room status enum (available, occupied, maintenance)
+- id — int
+- room_name — string
+- room_type_id — int
+- status — enum (`available`, `cleaning`, `occupied`)
+- floor — int
 
 ### Booking
-
-- `id` — UUID (primary key)
-- `user_id` — foreign key to User
-- `room_id` — foreign key to Room
-- `check_in` — check-in datetime (timezone-aware, UTC)
-- `check_out` — check-out datetime (timezone-aware, UTC)
-- `status` — booking status enum (pending, confirmed, cancelled)
+- id — UUID
+- user_id — UUID
+- room_id — int
+- check_in — datetime (timezone-aware)
+- check_out — datetime (timezone-aware)
+- status — enum (`pending`, `confirmed`, `cancelled`)
 
 ### Payment
+- id — UUID
+- booking_id — UUID
+- amount — int
+- payment_method — enum
+- payment_status — enum
 
-- `id` — UUID (primary key)
-- `booking_id` — foreign key to Booking
-- `amount` — payment amount (float)
-- `payment_method` — payment method enum (card, bank_transfer, cash)
-- `status` — payment status enum (pending, completed, failed)
+## 📘 OpenAPI Docs
 
-## 📘 OpenAPI Documentation
-
-After running the app, open the automatic API docs at:
-
-- Swagger UI: `http://127.0.0.1:8000/docs`
-- ReDoc: `http://127.0.0.1:8000/redoc`
+After starting the app, open:
+- Swagger UI: http://127.0.0.1:8000/docs
+- ReDoc: http://127.0.0.1:8000/redoc
 
 ## ⏰ Timezone Handling
 
-Booking `check_in` and `check_out` datetime fields are **timezone-aware** and stored in UTC. When sending requests with naive datetimes (no timezone info), the API will automatically convert them to UTC. Responses will always include timezone information.
-
-Example:
-```bash
-# Naive datetime (will be converted to UTC)
-POST /api/v1/booking
-{
-  "room_id": 1,
-  "check_in": "2026-07-15T10:00:00",
-  "check_out": "2026-07-17T11:00:00"
-}
-
-# Response (UTC-aware)
-{
-  "check_in": "2026-07-15T10:00:00+00:00",
-  "check_out": "2026-07-17T11:00:00+00:00"
-}
-```
+Booking dates are stored as timezone-aware datetimes. Naive datetime values are converted to UTC automatically.
 
 ## 📄 Database Migrations
 
-This project uses Alembic for schema migrations. Run:
+Run migrations with:
 
 ```bash
 poetry run alembic upgrade head
 ```
 
-Recent migrations include:
-- **Migration 11**: Add `RoomBedTypeEnum` with values (single, double, queen, king, twin, sofa, bunk)
-- **Migration 12**: Convert booking `check_in` and `check_out` columns to `TIMESTAMP(timezone=True)` for timezone-aware datetime storage
+## 🧪 Background Tasks
+
+Payment processing is handled asynchronously with Celery. When a booking is created with payment, the system queues a background task that updates the booking status to confirmed.
 
 ## ✨ Contact
 
-Author: `Norix10`
+Author: Norix10
