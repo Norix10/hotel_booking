@@ -23,7 +23,7 @@ async def get_db_session() -> AsyncGenerator:
 
 
 sync_engine = create_engine(
-    settings.SYNC_DB_URL,
+    settings.TEST_DB_URL,
     future=True,
     echo=settings.ECHO,
 )
