@@ -34,6 +34,9 @@ async def get_user_repo(
 ) -> UserRepository:
     return UserRepository(session)
 
+async def get_user_test_repo() -> UserRepository:
+    return UserRepository()
+
 
 async def get_user_service(
     user_repo: UserRepository = Depends(get_user_repo),

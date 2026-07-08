@@ -36,10 +36,10 @@ class BookingRepository(BaseRepository[Booking]):
         query = (
             select(Booking)
             .where(Booking.id == booking_id)
-            .options(joinedload(Booking.room).joinedload(Room.room_type))
+            .options(joinedload(Booking.room).joinedload(Room.room_types))
         )
         result = await self.session.execute(query)
-        return result.scalar_or_none()
+        return result.scalar_one_or_none()
 
     async def check_room_overlap(
         self,
