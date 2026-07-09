@@ -11,7 +11,7 @@ RUN pip install "poetry==$POETRY_VERSION"
 COPY ./pyproject.toml ./poetry.lock* /hotel_booking/
 
 RUN poetry config virtualenvs.in-project true && \
-    poetry install --no-root --no-interaction --no-ansi
+    poetry install --no-root --no-interaction --no-ansi --without dev
 
 FROM python:3.14-slim-bookworm AS runner
 

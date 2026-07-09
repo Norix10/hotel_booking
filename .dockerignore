@@ -19,7 +19,8 @@ venv/
 pip-log.txt
 pip-delete-this-directory.txt
 
+tests/
+*.md
 
 .dockerignore
-Dockerfile
-README.md   
+Dockerfile 
