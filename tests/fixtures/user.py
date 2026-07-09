@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_user_service
 from app.models.user import User
+from app.models.enums.user_enum import UserRoleEnum
 from app.schemas.auth import AccessTokenDataSchema
 from app.services.auth import create_access_token
 from app.utils.security import get_password_hash
@@ -45,3 +46,36 @@ def access_token(user_payload):
 @pytest.fixture()
 def update_user_payload():
     return {"new_name": "User Second", "new_password": "Password67!"}
+
+
+@pytest.fixture()
+def admin_payload():
+    return {
+        "name": "Admin Adminson",
+        "email": "admin.adminson@example.com",
+        "password": "!67AdminPass",
+    }
+
+
+@pytest.fixture()
+def admin_object(admin_payload) -> User:
+    return User(
+        id=UUID("11111111-1111-1111-1111-111111111111"),
+        name=admin_payload["name"],
+        email=admin_payload["email"],
+        hashed_password=get_password_hash(admin_payload["password"]),
+        role=UserRoleEnum.admin,
+    )
+
+
+@pytest_asyncio.fixture(scope="function")
+async def create_admin(session: AsyncSession, admin_object: User) -> User:
+    session.add(admin_object)
+    await session.commit()
+    return admin_object
+
+
+@pytest.fixture()
+def admin_access_token(admin_payload):
+    token_data = AccessTokenDataSchema(sub=admin_payload["email"])
+    return create_access_token(token_data)

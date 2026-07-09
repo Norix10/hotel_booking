@@ -22,3 +22,10 @@ async def get_db_session() -> AsyncGenerator:
         yield session
 
 
+sync_engine = create_engine(
+    settings.TEST_DB_URL,
+    future=True,
+    echo=settings.ECHO,
+)
+
+SyncSessionLocal = sessionmaker(sync_engine, autoflush=False, expire_on_commit=False)
