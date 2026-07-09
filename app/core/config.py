@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     DB_URL: str
 
-    TEST_DB_URL: str
+    TEST_DB_URL: str | None = None
     TEST_DB_ECHO: bool = False
 
     REDIS_URL: str
