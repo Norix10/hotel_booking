@@ -18,8 +18,13 @@ celery_app.conf.update(
 
 celery_app.conf.beat_schedule = {
     "cancel_expired_bookings_every_10_mins": {
-        "task": "app.tasks.bookings.cancel_expired_bookings",
+        "task": "app.tasks.studio_tasks.cancel_expired_bookings",
         "schedule": 600.0,
-    }
+    },
+    "release_checked_out_rooms_every_10_mins": {
+        "task": "app.tasks.studio_tasks.release_checked_out_rooms",
+        "schedule": 600.0,
+    },
 }
+
 celery_app.conf.timezone = "Europe/Kyiv"

@@ -8,6 +8,7 @@ from sqlalchemy.orm import joinedload
 from app.repositories.base import BaseRepository
 from app.schemas.booking import BookingAdminFilterSchema
 from app.models.enums.booking_enum import BookingStatusEnum
+from app.models.enums.room_enum import RoomStatusTypeEnum
 from app.models.booking import Booking
 from app.models.room import Room
 
@@ -89,6 +90,8 @@ class BookingRepository(BaseRepository[Booking]):
 
         if filters is not None:
             filter_dict = filters.model_dump(exclude_none=True)
+        else:
+            filter_dict = {}
 
         check_in_val = filter_dict.pop("check_in", None)
         check_out_val = filter_dict.pop("check_out", None)
@@ -129,3 +132,17 @@ class BookingRepository(BaseRepository[Booking]):
             select(Booking).where(Booking.user_id == user_id, Booking.id == booking_id)
         )
         return result.scalar_one_or_none()
+
+    async def get_confirmed_checked_out_bookings(self, now: datetime) -> list[Booking]:
+        query = (
+            select(Booking)
+            .join(Room, Booking.room_id == Room.id)
+            .where(
+                Booking.status == BookingStatusEnum.confirmed,
+                Booking.check_out <= now,
+                Room.status == RoomStatusTypeEnum.occupied,
+            )
+            .options(joinedload(Booking.room))
+        )
+        result = await self.session.execute(query)
+        return list(result.scalars().unique().all())

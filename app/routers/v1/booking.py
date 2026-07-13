@@ -17,7 +17,7 @@ from app.models.user import User
 from app.models.enums.booking_enum import BookingStatusEnum
 from app.services.booking import BookingService
 from app.services.booking_payments import BookingPaymentService
-from app.tasks.payment_tasks import process_payment_bg
+from app.tasks.payment_tasks import process_payment_bg, auto_refund_payment
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
 
@@ -90,4 +90,8 @@ async def cancel_booking(
     current_user: User = Security(get_current_user),
     booking_service: BookingService = Depends(get_booking_service),
 ) -> BookingResponseSchema:
-    return await booking_service.cancel_booking(current_user.id, booking_id)
+    cancelled_booking = await booking_service.cancel_booking(
+        current_user.id, booking_id
+    )
+    auto_refund_payment.delay(booking_id)
+    return cancelled_booking
