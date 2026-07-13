@@ -14,13 +14,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    # DB не проброшена назовні — доступна лише всередині docker-мережі
 
   redis_broker:
     image: redis:7-alpine
     container_name: hotel_booking_redis
     restart: unless-stopped
-    # порт теж не проброшений назовні
 
   web:
     build:
