@@ -45,6 +45,7 @@ The application follows a layered structure:
 - app/routers/v1/ — user, room, booking, payment, and admin endpoints
 - app/services/ — service layer for all business workflows
 - app/repositories/ — repository layer for database operations
+- app/tasks/ — Celery background tasks
 - app/alembic/ — database migrations
 - tests/ — API, service, and repository tests
 
@@ -60,17 +61,22 @@ The application follows a layered structure:
 Create a .env file in the project root:
 
 ```env
-DB_URL=postgresql+asyncpg://hotel_user:hotel_password@localhost:5432/hotel_db
-SYNC_DB_URL=postgresql+psycopg://hotel_user:hotel_password@localhost:5432/hotel_db
-REDIS_URL=redis://localhost:6379/0
-SECRET_KEY=your-secret-key
-ECHO=False
+DB_URL=postgresql+asyncpg://hotel_user:hotel_password@db:5432/hotel_db
+POSTGRES_USER=hotel_user
+POSTGRES_PASSWORD=hotel_password
+POSTGRES_DB=hotel_db
+ECHO=false
+TEST_DB_URL=postgresql+psycopg://hotel_user_test:hotel_password_test@localhost:5000/hotel_db_test
+TEST_DB_ECHO=false
+SECRET_KEY=change-me-to-a-random-secret
+ALGORITHM=HS256
+REDIS_URL=redis://redis_broker:6379/0
 ```
 
 ### Variables
 
 - DB_URL — async SQLAlchemy connection string
-- SYNC_DB_URL — synchronous DB URL used for Celery/sync operations
+- TEST_DB_URL —  DB URL used for tests
 - REDIS_URL — Redis connection string for Celery
 - SECRET_KEY — secret key for JWT signing
 - ECHO — enable SQLAlchemy query logging
