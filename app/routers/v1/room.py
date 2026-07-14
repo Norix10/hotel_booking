@@ -15,20 +15,12 @@ router = APIRouter(prefix="/room", tags=["room"])
 
 @router.get("/", response_model=list[RoomResponseSchema])
 async def get_all_room(
+    available: bool = False,
     skip: int = 0,
     limit: int = 10,
     room_service: RoomService = Depends(get_room_service),
 ):
-    return await room_service.get_all_rooms(skip, limit)
-
-
-@router.get("/available", response_model=list[RoomResponseSchema])
-async def get_available_rooms(
-    skip: int = 0,
-    limit: int = 10,
-    room_service: RoomService = Depends(get_room_service),
-) -> list[RoomResponseSchema]:
-    return await room_service.get_all_rooms(skip, limit)
+    return await room_service.get_all_rooms(available, skip, limit)
 
 
 @router.get("/{room_id}", response_model=RoomResponseSchema)

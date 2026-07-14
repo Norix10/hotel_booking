@@ -18,8 +18,10 @@ class RoomService:
         return room
 
     async def get_all_rooms(
-        self, skip: int = 0, limit: int = 10
+        self, only_available: bool = False, skip: int = 0, limit: int = 10
     ) -> list[RoomResponseSchema]:
+        if only_available:
+            return await self.room_repo.get_availble_rooms(skip, limit)
         return await self.room_repo.get_all(skip, limit)
 
     async def get_availible_rooms(
