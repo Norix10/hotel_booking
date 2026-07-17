@@ -22,10 +22,15 @@ async def get_db_session() -> AsyncGenerator:
         yield session
 
 
+SYNC_DB_URL = settings.DB_URL.replace("postgresql+asyncpg://", "postgresql+psycopg://")
+
 sync_engine = create_engine(
-    settings.DB_URL,
+    SYNC_DB_URL,
     future=True,
     echo=settings.ECHO,
+    pool_pre_ping=True,
 )
 
-SyncSessionLocal = sessionmaker(sync_engine, autoflush=False, expire_on_commit=False)
+SyncSessionLocal = sessionmaker(
+    bind=sync_engine, autoflush=False, expire_on_commit=False
+)
