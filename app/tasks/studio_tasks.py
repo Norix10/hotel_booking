@@ -2,14 +2,14 @@ import asyncio
 from datetime import datetime, timezone
 
 from app.core.celery_config import celery_app
-from app.db.database import get_db_session
+from app.db.database import AsyncSession
 from app.repositories.booking import BookingRepository
 from app.models.enums.booking_enum import BookingStatusEnum
 from app.models.enums.room_enum import RoomStatusTypeEnum
 
 
 async def _cancel_expired_logic():
-    async with get_db_session() as session:
+    async with AsyncSession() as session:
         booking_repo = BookingRepository(session)
         expired_bookings = await booking_repo.get_expired_pending_bookins(
             expiration_minutes=30
@@ -28,7 +28,7 @@ def cancel_expired_bookings():
 
 
 async def _release_checked_out_rooms_logic():
-    async with get_db_session() as session:
+    async with AsyncSession() as session:
         booking_repo = BookingRepository(session)
         now = datetime.now(timezone.utc)
         bookings = await booking_repo.get_confirmed_checked_out_bookings(now)

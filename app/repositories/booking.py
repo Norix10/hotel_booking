@@ -1,6 +1,6 @@
 from uuid import UUID
 from typing import Optional
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -18,7 +18,7 @@ class BookingRepository(BaseRepository[Booking]):
         super().__init__(Booking, session)
 
     async def get_expired_pending_bookins(self, expiration_minutes: int):
-        time = datetime.utcnow() - timedelta(minutes=expiration_minutes)
+        time = datetime.now(timezone.utc) - timedelta(minutes=expiration_minutes)
         query = select(Booking).where(
             Booking.status == BookingStatusEnum.pending, Booking.created_at <= time
         )
