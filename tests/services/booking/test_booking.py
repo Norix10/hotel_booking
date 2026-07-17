@@ -56,20 +56,20 @@ async def test_create_booking_room_not_found(
 
 
 @pytest.mark.asyncio
-async def test_create_booking_room_not_available(
+async def test_create_booking_ignores_room_operational_status(
     prepare_db, session: AsyncSession, create_user, create_room, booking_payload
 ):
     create_room.status = RoomStatusTypeEnum.occupied
     await session.commit()
+
     service = build_service(session)
     data = BookingCreateSchema(
         room_id=booking_payload["room_id"],
         check_in=booking_payload["check_in"],
         check_out=booking_payload["check_out"],
     )
-    with pytest.raises(HTTPException) as exc_info:
-        await service.create_booking(create_user.id, data)
-    assert exc_info.value.status_code == status.HTTP_409_CONFLICT
+    booking = await service.create_booking(create_user.id, data)
+    assert booking.status == BookingStatusEnum.pending
 
 
 @pytest.mark.asyncio
@@ -128,9 +128,7 @@ async def test_update_booking(
 
 
 @pytest.mark.asyncio
-async def test_update_booking_not_found(
-    prepare_db, session: AsyncSession, create_user
-):
+async def test_update_booking_not_found(prepare_db, session: AsyncSession, create_user):
     service = build_service(session)
     data = BookingUpdateSchema()
     with pytest.raises(HTTPException) as exc_info:
@@ -157,7 +155,9 @@ async def test_cancel_booking(
 
 
 @pytest.mark.asyncio
-async def test_admin_get_booking_by_id(prepare_db, session: AsyncSession, create_booking):
+async def test_admin_get_booking_by_id(
+    prepare_db, session: AsyncSession, create_booking
+):
     service = build_service(session)
     booking = await service.admin_get_booking_by_id(create_booking.id)
     assert booking.id == create_booking.id

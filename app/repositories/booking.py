@@ -11,6 +11,7 @@ from app.models.enums.booking_enum import BookingStatusEnum
 from app.models.enums.room_enum import RoomStatusTypeEnum
 from app.models.booking import Booking
 from app.models.room import Room
+from app.core.config import settings
 
 
 class BookingRepository(BaseRepository[Booking]):
@@ -49,16 +50,21 @@ class BookingRepository(BaseRepository[Booking]):
         check_out: datetime,
         exclude_booking_id: Optional[UUID] = None,
     ) -> bool:
-        query = select(Booking).where(
+        buffer = settings.CLEANING_BUFFER
+
+        conditions = [
             Booking.room_id == room_id,
             Booking.status != BookingStatusEnum.cancelled,
-            and_(check_in < Booking.check_out, check_out > Booking.check_in),
-        )
+            and_(
+                check_in < Booking.check_out + buffer,
+                check_out + buffer > Booking.check_in,
+            ),
+        ]
 
         if exclude_booking_id is not None:
-            query = query.where(Booking.id != exclude_booking_id)
+            conditions.append(Booking.id != exclude_booking_id)
 
-        query = query.limit(1).with_for_update()
+        query = select(Booking).where(*conditions).with_for_update()
 
         result = await self.session.execute(query)
         return result.scalars().first() is not None
@@ -141,6 +147,22 @@ class BookingRepository(BaseRepository[Booking]):
                 Booking.status == BookingStatusEnum.confirmed,
                 Booking.check_out <= now,
                 Room.status == RoomStatusTypeEnum.occupied,
+            )
+            .options(joinedload(Booking.room))
+        )
+        result = await self.session.execute(query)
+        return list(result.scalars().unique().all())
+
+    async def get_bookings_ready_after_cleaning(
+        self, threshold: datetime
+    ) -> list[Booking]:
+        query = (
+            select(Booking)
+            .join(Room, Booking.room_id == Room.id)
+            .where(
+                Booking.status == BookingStatusEnum.confirmed,
+                Booking.check_out <= threshold,
+                Room.status == RoomStatusTypeEnum.cleaning,
             )
             .options(joinedload(Booking.room))
         )

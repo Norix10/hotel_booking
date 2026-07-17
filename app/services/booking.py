@@ -57,16 +57,17 @@ class BookingService:
         check_in: datetime,
         check_out: datetime,
         exclude_booking_id: Optional[UUID] = None,
-    ):
+    ) -> None:
+        if check_in >= check_out:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Check-out date must be after check-in date",
+            )
+
         room = await self.room_repo.get_by_id(room_id)
         if room is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Room not found"
-            )
-        if room.status != RoomStatusTypeEnum.available:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="This room is not available",
             )
 
         is_overlapping = await self.booking_repo.check_room_overlap(

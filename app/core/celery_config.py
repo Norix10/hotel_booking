@@ -25,6 +25,10 @@ celery_app.conf.beat_schedule = {
         "task": "app.tasks.studio_tasks.release_checked_out_rooms",
         "schedule": 600.0,
     },
+    "mark_rooms_available_after_cleaning_every_10_mins": {
+        "task": "app.tasks.studio_tasks.mark_rooms_available_after_cleaning",
+        "schedule": 600.0,
+    },
 }
 
 celery_app.conf.timezone = "Europe/Kyiv"
