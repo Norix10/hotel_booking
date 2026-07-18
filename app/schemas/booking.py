@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -12,20 +12,8 @@ class BookingExtraValidator:
 
 
 class BookingDatesMixin(BaseModel):
-    check_in: datetime | None = None
-    check_out: datetime | None = None
-
-    @model_validator(mode="before")
-    def make_datetimes_aware(cls, values):
-        if not isinstance(values, dict):
-            return values
-
-        for field in ("check_in", "check_out"):
-            value = values.get(field)
-            if isinstance(value, datetime) and value.tzinfo is None:
-                values[field] = value.replace(tzinfo=timezone.utc)
-
-        return values
+    check_in: date | None = None
+    check_out: date | None = None
 
     @model_validator(mode="after")
     def validate_dates(self):
@@ -34,14 +22,14 @@ class BookingDatesMixin(BaseModel):
             and self.check_out is not None
             and self.check_in >= self.check_out
         ):
-            raise ValueError("Check-out must be after check-in")
+            raise ValueError("Check-out date must be after check-in date")
         return self
 
 
 class BookingCreateSchema(BookingDatesMixin, BookingExtraValidator):
     room_id: int
-    check_in: datetime
-    check_out: datetime
+    check_in: date
+    check_out: date
 
 
 class BookingWithPaymentCreateSchema(BookingCreateSchema, PaymentCreateSchema):
@@ -49,14 +37,14 @@ class BookingWithPaymentCreateSchema(BookingCreateSchema, PaymentCreateSchema):
 
 
 class BookingUpdateSchema(BookingDatesMixin, BookingExtraValidator):
-    check_in: datetime | None = Field(default=None)
-    check_out: datetime | None = Field(default=None)
+    check_in: date | None = Field(default=None)
+    check_out: date | None = Field(default=None)
 
 
 class BookingAdminUpdateSchema(BookingDatesMixin, BookingExtraValidator):
     room_id: int | None = Field(default=None)
-    check_in: datetime | None = Field(default=None)
-    check_out: datetime | None = Field(default=None)
+    check_in: date | None = Field(default=None)
+    check_out: date | None = Field(default=None)
     status: BookingStatusEnum | None = Field(default=None)
 
 

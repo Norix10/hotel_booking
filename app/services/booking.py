@@ -1,7 +1,7 @@
 from uuid import UUID
 from typing import Optional
 from fastapi import HTTPException, status
-from datetime import datetime
+from datetime import datetime, date, timezone
 
 from app.repositories.booking import BookingRepository
 from app.repositories.room import RoomRepository
@@ -17,6 +17,7 @@ from app.schemas.booking import (
 from app.models.booking import Booking
 from app.models.enums.booking_enum import BookingStatusEnum
 from app.models.enums.room_enum import RoomStatusTypeEnum
+from app.core.config import settings
 
 
 class BookingService:
@@ -29,6 +30,15 @@ class BookingService:
         self.booking_repo = booking_repo
         self.room_repo = room_repo
         self.payment_repo = payment_repo
+
+    @staticmethod
+    def _to_datetime_range(
+        check_in: date, check_out: date
+    ) -> tuple[datetime, datetime]:
+        return (
+            datetime.combine(check_in, settings.CHECK_IN_TIME, tzinfo=timezone.utc),
+            datetime.combine(check_out, settings.CHECK_OUT_TIME, tzinfo=timezone.utc),
+        )
 
     async def _get_booking_or_404(self, booking_id: UUID):
         booking = await self.booking_repo.get_by_id(booking_id)
@@ -129,15 +139,17 @@ class BookingService:
     async def create_booking(
         self, user_id: UUID, data: BookingCreateSchema
     ) -> BookingResponseSchema:
+        check_in, check_out = self._to_datetime_range(data.check_in, data.check_out)
+
         await self.booking_time_validator(
-            room_id=data.room_id, check_in=data.check_in, check_out=data.check_out
+            room_id=data.room_id, check_in=check_in, check_out=check_out
         )
 
         new_booking = Booking(
             user_id=user_id,
             room_id=data.room_id,
-            check_in=data.check_in,
-            check_out=data.check_out,
+            check_in=check_in,
+            check_out=check_out,
             status=BookingStatusEnum.pending,
         )
         new_booking = await self.booking_repo.create(new_booking)
@@ -149,8 +161,14 @@ class BookingService:
     ) -> BookingResponseSchema:
         booking = await self._get_user_booking_or_404(user_id, booking_id)
         room_id = booking.room_id
-        check_in = data.check_in if data.check_in is not None else booking.check_in
-        check_out = data.check_out if data.check_out is not None else booking.check_out
+
+        raw_check_in = (
+            data.check_in if data.check_in is not None else booking.check_in.date()
+        )
+        raw_check_out = (
+            data.check_out if data.check_out is not None else booking.check_out.date()
+        )
+        check_in, check_out = self._to_datetime_range(raw_check_in, raw_check_out)
 
         await self.booking_time_validator(
             room_id=room_id,
@@ -159,8 +177,14 @@ class BookingService:
             exclude_booking_id=booking_id,
         )
 
-        for field, value in data.model_dump(exclude_unset=True).items():
+        update_data = data.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
             setattr(booking, field, value)
+
+        if "check_in" in update_data:
+            booking.check_in = check_in
+        if "check_out" in update_data:
+            booking.check_out = check_out
 
         updated_booking = await self.booking_repo.update(booking)
         return BookingResponseSchema.model_validate(updated_booking)
@@ -170,8 +194,14 @@ class BookingService:
     ) -> BookingResponseSchema:
         booking = await self._get_booking_or_404(booking_id)
         room_id = data.room_id if data.room_id is not None else booking.room_id
-        check_in = data.check_in if data.check_in is not None else booking.check_in
-        check_out = data.check_out if data.check_out is not None else booking.check_out
+
+        raw_check_in = (
+            data.check_in if data.check_in is not None else booking.check_in.date()
+        )
+        raw_check_out = (
+            data.check_out if data.check_out is not None else booking.check_out.date()
+        )
+        check_in, check_out = self._to_datetime_range(raw_check_in, raw_check_out)
 
         await self.booking_time_validator(
             room_id=room_id,
@@ -180,8 +210,14 @@ class BookingService:
             exclude_booking_id=booking_id,
         )
 
-        for field, value in data.model_dump(exclude_unset=True).items():
+        update_data = data.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
             setattr(booking, field, value)
+
+        if "check_in" in update_data:
+            booking.check_in = check_in
+        if "check_out" in update_data:
+            booking.check_out = check_out
 
         updated_booking = await self.booking_repo.update(booking)
         return BookingResponseSchema.model_validate(updated_booking)

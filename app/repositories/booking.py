@@ -109,7 +109,7 @@ class BookingRepository(BaseRepository[Booking]):
         if check_in_val is not None:
             query = query.where(Booking.check_in >= check_in_val)
         if check_out_val is not None:
-            query = query.where(Booking.check_out <= check_out_val)
+            query = query.where(Booking.check_out <= check_out_val + timedelta(days=1))
 
         query = query.offset(skip).limit(limit)
 
