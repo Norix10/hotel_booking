@@ -1,12 +1,12 @@
 import pytest
 from uuid import uuid4
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.repositories.booking import BookingRepository
 from app.models.booking import Booking
 from app.models.enums.booking_enum import BookingStatusEnum
 from app.schemas.booking import BookingAdminFilterSchema
+from app.core.config import settings
 
 
 @pytest.mark.asyncio
@@ -17,8 +17,12 @@ async def test_create_booking(
     booking = Booking(
         user_id=create_user.id,
         room_id=booking_payload["room_id"],
-        check_in=booking_payload["check_in"],
-        check_out=booking_payload["check_out"],
+        check_in=datetime.combine(
+            booking_payload["check_in"], settings.CHECK_IN_TIME, tzinfo=timezone.utc
+        ),
+        check_out=datetime.combine(
+            booking_payload["check_out"], settings.CHECK_OUT_TIME, tzinfo=timezone.utc
+        ),
         status=BookingStatusEnum.pending,
     )
     created = await repo.create(booking)
@@ -66,7 +70,9 @@ async def test_get_by_user_id_with_status_filter(
     prepare_db, session: AsyncSession, create_user, create_booking
 ):
     repo = BookingRepository(session)
-    pending = await repo.get_by_user_id(create_user.id, status=BookingStatusEnum.pending)
+    pending = await repo.get_by_user_id(
+        create_user.id, status=BookingStatusEnum.pending
+    )
     assert len(pending) == 1
     confirmed = await repo.get_by_user_id(
         create_user.id, status=BookingStatusEnum.confirmed

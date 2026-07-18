@@ -83,7 +83,7 @@ async def test_get_booking_by_id_not_found(
 async def test_update_booking(
     prepare_db, create_booking, access_token: str, async_client: AsyncClient
 ):
-    new_check_in = create_booking.check_out + timedelta(days=5)
+    new_check_in = create_booking.check_out.date() + timedelta(days=5)
     new_check_out = new_check_in + timedelta(days=2)
     response = await async_client.patch(
         f"/api/v1/bookings/{create_booking.id}",

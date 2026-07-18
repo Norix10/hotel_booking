@@ -3,7 +3,6 @@ from uuid import uuid4
 from datetime import timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
-
 from app.services.booking import BookingService
 from app.repositories.booking import BookingRepository
 from app.repositories.room import RoomRepository
@@ -61,7 +60,6 @@ async def test_create_booking_ignores_room_operational_status(
 ):
     create_room.status = RoomStatusTypeEnum.occupied
     await session.commit()
-
     service = build_service(session)
     data = BookingCreateSchema(
         room_id=booking_payload["room_id"],
@@ -79,8 +77,8 @@ async def test_create_booking_overlapping_dates(
     service = build_service(session)
     data = BookingCreateSchema(
         room_id=create_booking.room_id,
-        check_in=create_booking.check_in,
-        check_out=create_booking.check_out,
+        check_in=create_booking.check_in.date(),
+        check_out=create_booking.check_out.date(),
     )
     with pytest.raises(HTTPException) as exc_info:
         await service.create_booking(create_user.id, data)
@@ -120,11 +118,11 @@ async def test_update_booking(
     prepare_db, session: AsyncSession, create_user, create_booking
 ):
     service = build_service(session)
-    new_check_in = create_booking.check_out + timedelta(days=5)
+    new_check_in = create_booking.check_out.date() + timedelta(days=5)
     new_check_out = new_check_in + timedelta(days=2)
     data = BookingUpdateSchema(check_in=new_check_in, check_out=new_check_out)
     updated = await service.update_booking(create_user.id, create_booking.id, data)
-    assert updated.check_in == new_check_in
+    assert updated.check_in.date() == new_check_in
 
 
 @pytest.mark.asyncio
