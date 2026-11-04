@@ -12,6 +12,8 @@ This project provides a complete backend for a hotel booking system with:
 - booking creation, updates, cancellation, and filtering,
 - payment creation with background confirmation processing,
 - health checks, Alembic migrations, and Docker-based local development.
+- 
+> A default user already exists in the app with the default name "User Userson" from the schema, and this account has admin privileges.
 
 ## 🧩 Tech Stack
 
