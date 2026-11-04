@@ -94,7 +94,7 @@ poetry run uvicorn app.main:app --reload
 ```
 
 The API will be available at:
-- http://3.123.132.252:8000/
+- AWS: http://3.123.132.252/
 - http://0.0.0.0:8000
 - Swagger UI: http://0.0.0.0:8000/docs
 - ReDoc: http://0.0.0.0:8000/redoc
